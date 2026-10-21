@@ -2,7 +2,8 @@
 
 一个可复现的油气领域 RAG 检索实验项目。仓库保留原始 FastAPI + Chroma
 问答原型，并新增长度感知分块、BM25、向量检索、RRF 混合检索、统一重排
-和证据跨度评测。
+和证据跨度评测。目前在线链路还包含异步知识入库、结构化父子切分、内容哈希
+幂等、失败重试及文档版本原子切换。
 
 ## 实验结论
 
@@ -26,8 +27,10 @@
 
 ```text
 文档上传
-  -> 文本提取与分块
-  -> Chroma / MiniLM 向量索引
+  -> 持久化任务队列与状态机
+  -> 结构解析与父子分块
+  -> Chroma / MiniLM 暂存版本
+  -> 完整性校验与原子激活
   -> Dense + BM25 候选召回
   -> RRF 融合
   -> Cohere Rerank
@@ -36,7 +39,10 @@
 
 - `backend/`：原 FastAPI RAG 原型及新增检索模块。
 - `backend/TokenChunking.py`：按嵌入模型 token 上限切分并保留源字符位置。
+- `backend/StructureChunking.py`：章节/条款优先的父子切分，小块召回、父块扩展。
+- `backend/Ingestion.py`：持久化异步任务、幂等、重试、版本激活、审计与回滚。
 - `backend/HybridRetrieval.py`：当前在线使用的 BM25、RRF 和统一权限范围过滤实现。
+- `docs/INGESTION_LIFECYCLE.md`：入库状态机、接口和一致性边界。
 - `experiments/production_proxy/`：220 题生产场景代理评测。
 - `experiments/petroleum_retrieval/`：较早的 DISKOS-QA 对照实验。
 - `frontend/`：原型前端页面。
@@ -84,12 +90,20 @@ Set-Location backend
 uvicorn FastAPI:app --port 8000 --reload
 ```
 
+`POST /process_file/`现在返回HTTP 202和`job_id`。通过
+`GET /ingestion_jobs/{job_id}`查询处理状态；版本历史、失败重试和回滚接口见
+[异步入库与版本生命周期说明](docs/INGESTION_LIFECYCLE.md)。本地默认使用
+SQLite WAL和一个后台工作线程，运行数据保存在被Git忽略的
+`backend/ingestion_data/`。
+
 前端为静态页面，可在 `frontend/` 目录启动任意本地 HTTP 服务器。
 
 ## 已知限制
 
 - 公开评测是英语报告，不能推断中文企业问答效果。
 - 目前的权限与版本实验使用显式元数据上下文，尚未接入真实身份认证。
+- 默认任务执行器面向单机演示；多实例生产部署需要Redis/Celery、PostgreSQL和
+  支持跨进程原子版本路由的检索后端。
 - 无答案题仍会召回相似文本，尚未实现可靠拒答器。
 - 本地离线实验不是并发、吞吐量或生产 SLA 测试。
 - 可用 `git switch --detach legacy-vector-baseline` 查看升级前的纯向量版本。

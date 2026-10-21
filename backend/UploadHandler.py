@@ -43,6 +43,30 @@ class UploadHandler:
         else:
             return ["error", f"Error parsing {filename}: Unsupported file type {file_extension}"]
 
+    def extract_text(self, file: bytes, filename: str):
+        """Extract normalized text without chunking it.
+
+        The asynchronous ingestion pipeline owns structure-aware chunking.  The
+        older ``handle_file`` method remains available for reproducibility and
+        backwards compatibility with the original synchronous code path.
+        """
+        extension = os.path.splitext(filename)[1].lower()
+        try:
+            if extension == '.html':
+                return ["success", self.h.handle(file.decode('utf-8'))]
+            if extension == '.txt':
+                text = file.decode('utf-8')
+                lines = text.splitlines()
+                url_pattern = re.compile(r'https?://[^\s]+')
+                if lines and url_pattern.fullmatch(lines[0].strip()):
+                    return ["error", "URL-list files must use the URL ingestion endpoint"]
+                return ["success", text.replace('\r\n', '\n').replace('\r', '\n')]
+            return ["error", f"Error parsing {filename}: Unsupported file type {extension}"]
+        except UnicodeDecodeError:
+            return ["error", f"Error parsing {filename}: file must be UTF-8 encoded"]
+        except Exception as exc:
+            return ["error", f"An error occurred while parsing {filename}: {str(exc)}"]
+
  #切割html文件       
     def handle_html(self, file: bytes, filename: str):
         try:

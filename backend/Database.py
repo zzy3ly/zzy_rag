@@ -325,12 +325,21 @@ class Database:
     def add_document(self, document_id, collection_id, title, content):
         collection = self.get_collection(collection_id)
         if collection:
+            existing = self.session.query(Document).filter_by(
+                document_id=document_id).first()
+            if existing:
+                existing.title = title
+                self.session.commit()
+                return {"message": "Document already registered.", "status": "success"}
             document = Document(title=title, content=content, collection=collection, document_id=document_id)
             self.session.add(document)
             self.session.commit()
             return {"message": "Document added successfully.", "status": "success"}
         else:
             return {"message": "Collection not found.", "status": "error"}
+
+    def get_document(self, document_id):
+        return self.session.query(Document).filter_by(document_id=document_id).first()
 
     def get_documents_by_collection(self, collection_id):
         collection = self.get_collection(collection_id)
@@ -345,7 +354,8 @@ class Database:
         return []
 
     def remove_document(self, document_id):
-        document = self.session.query(Document).filter_by(id=document_id).first()
+        document = self.session.query(Document).filter_by(
+            document_id=document_id).first()
         if document:
             self.session.delete(document)
             self.session.commit()

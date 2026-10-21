@@ -9,6 +9,7 @@ uvicorn FastAPI:app --port 8000 --reload
 from fastapi import FastAPI, HTTPException, File, UploadFile, Form
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.concurrency import run_in_threadpool
 from pydantic import BaseModel
 from typing import List
 import time
@@ -22,6 +23,7 @@ import json
 from ChatBot import ModularChatbot
 from LLM import LLMInteraction
 from Database import Database
+from Ingestion import IngestionManager
 
 iso_LLM = LLMInteraction()
 
@@ -41,6 +43,17 @@ db = Database()
 
 # initialize ModularChatbot here
 chatbot = ModularChatbot(database=db)
+_backend_dir = os.path.dirname(os.path.abspath(__file__))
+ingestion = IngestionManager(
+    chatbot.embedding_handler,
+    database_path=os.path.join(_backend_dir, "ingestion_data", "lifecycle.db"),
+    blob_directory=os.path.join(_backend_dir, "ingestion_data", "blobs"),
+)
+
+
+@app.on_event("shutdown")
+def stop_ingestion_workers():
+    ingestion.shutdown()
 
 class ChatRequest(BaseModel):
     user_id: str
@@ -203,7 +216,7 @@ class DocumentId(BaseModel):
 @app.post("/delete_document/")
 async def delete_document(document_id: DocumentId):
     try:
-        db.delete_document(document_id.document_id)
+        db.remove_document(document_id.document_id)
         chatbot.embedding_handler.remove_documents([document_id.document_id])
         return {"status": "success", "message": f"Document deleted: {document_id.document_id}"}
     except Exception as e:
@@ -211,58 +224,80 @@ async def delete_document(document_id: DocumentId):
 
 ### FILE/URL PROCESSING ###
 
-@app.post("/process_file/")
-async def process_file(collection_id: str = Form(...), file: UploadFile = File(...)):
+@app.post("/process_file/", status_code=202)
+async def process_file(collection_id: str = Form(...), file: UploadFile = File(...),
+                       document_key: str = Form(None)):
+    """Persist the upload and return before parsing or embedding starts."""
     if not file:
         raise HTTPException(status_code=400, detail="No file uploaded")
-    
-    filename = file.filename
-    file_extension = os.path.splitext(filename)[1]
-    print(f"Processing file: {filename} with extension: {file_extension}")
-    
+    if not db.get_collection(collection_id):
+        raise HTTPException(status_code=404, detail="Collection not found")
+    filename = file.filename or "upload.txt"
+    file_extension = os.path.splitext(filename)[1].lower()
     if file_extension == '.zip':
         contents = await file.read()
-        print("Reading zip file contents")
         zip_contents = chatbot.embedding_handler.read_zip_contents(contents, filename)
         if zip_contents[0] == "error":
-            print(f"Error reading zip contents: {zip_contents[1]}")
-            return {"status": "error", "message": f"Error reading zip contents: {zip_contents[1]}"}
-        
-        processing_results = []
-        document_ids = []
+            raise HTTPException(status_code=400, detail=zip_contents[1])
+        jobs = []
         for file_name, file_content in zip_contents[1]:
-            document_id = str(uuid.uuid4())
-            print(f"Processing file: {file_name} with generated document ID: {document_id}")
-            processing_result = chatbot.embedding_handler.fully_process_file(file_content.encode(), file_name, document_id)
-            if processing_result[0] == "success":
-                db.add_document(document_id, collection_id, file_name, file_content.encode())
-                processing_results.append({"document_id": document_id, "status": "success", "filename": file_name})
-                document_ids.append(document_id)
-            else:
-                processing_results.append({"document_id": document_id, "status": "error", "filename": file_name, "message": processing_result[1]})
-                print(f"Error processing file: {file_name}, aborting and cleaning up")
-                # if any file fails, abort and clean up all processed documents
-                if document_ids:
-                    chatbot.embedding_handler.remove_documents(document_ids)
-                    for doc_id in document_ids:
-                        db.delete_document(doc_id)
-                return {"status": "error", "message": "Not all files in zip could be processed successfully, aborted and cleaned up partial data", "documents": processing_results}
-        
-        print("All files in zip processed successfully")
-        return {"status": "success", "message": "All files in zip processed successfully", "documents": processing_results}
-    else:
-        document_id = str(uuid.uuid4())
-        contents = await file.read()
-        print(f"Processing single file: {filename} with document ID: {document_id}")
-        processing_result = chatbot.embedding_handler.fully_process_file(contents, filename, document_id)
-        if processing_result[0] == "success":
-            # add the document to the database if processing was successful
-            db.add_document(document_id, collection_id, filename, contents)
-            print(f"File processed and added to collection ID: {collection_id}")
-            return {"status": "success", "message": "File processed successfully", "document_id": document_id}
-        else:
-            print(f"Error processing file: {filename}")
-            return {"status": "error", "message": f"Error processing file: {processing_result[1]}", "document_id": document_id}
+            if file_name == "error":
+                raise HTTPException(status_code=400, detail=file_content)
+            submitted = ingestion.submit(
+                collection_id, file_name, file_content.encode("utf-8"),
+                document_key=file_name)
+            db.add_document(submitted["document_id"], collection_id,
+                            file_name, "Managed by ingestion lifecycle")
+            jobs.append(submitted)
+        return {"status": "accepted", "jobs": jobs}
+    try:
+        await file.seek(0)
+        job = await run_in_threadpool(
+            ingestion.submit_stream, collection_id, filename, file.file,
+            document_key or filename)
+        db.add_document(job["document_id"], collection_id, filename,
+                        "Managed by ingestion lifecycle")
+        return {"status": "accepted", **job}
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+@app.get("/ingestion_jobs/{job_id}")
+async def ingestion_status(job_id: str):
+    result = ingestion.status(job_id)
+    if not result:
+        raise HTTPException(status_code=404, detail="Ingestion job not found")
+    return result
+
+
+@app.post("/ingestion_jobs/{job_id}/retry", status_code=202)
+async def retry_ingestion(job_id: str):
+    try:
+        return ingestion.retry(job_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Ingestion job not found")
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
+
+
+class VersionRollback(BaseModel):
+    version_id: str
+
+
+@app.get("/documents/{document_id}/versions")
+async def document_versions(document_id: str):
+    return {"document_id": document_id,
+            "versions": ingestion.store.history(document_id)}
+
+
+@app.post("/documents/{document_id}/rollback")
+async def rollback_document(document_id: str, request: VersionRollback):
+    try:
+        return ingestion.rollback(document_id, request.version_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Document version not found")
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
 
 @app.post("/process_url/")
 async def process_url(collection_id: str = Form(...), url: str = Form(...)):

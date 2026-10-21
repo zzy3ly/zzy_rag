@@ -13,6 +13,7 @@ backend/scrapingant.txt
 chromadb/
 **/chromadb/
 **/cache/
+backend/ingestion_data/
 
 # Downloaded source corpora (recreated by the documented scripts)
 experiments/**/raw/
