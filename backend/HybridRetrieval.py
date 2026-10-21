@@ -1,13 +1,15 @@
-"""Small-corpus BM25 + vector RRF retriever; leaves Embeddings.py unchanged.
+"""BM25 + vector RRF retriever used by the online EmbeddingHandler.
 
 This in-memory BM25 implementation is for a reproducible prototype. For a larger
 or multi-process deployment, replace its backend with a maintained search service.
-The index is an immutable snapshot: rebuild after a corpus change.
+The BM25 index is an immutable snapshot and is atomically replaced after a corpus
+change so concurrent readers never observe a partially built index.
 """
 from collections import Counter, defaultdict
 from dataclasses import dataclass
 import math
 import re
+import threading
 import unicodedata
 
 import numpy as np
@@ -23,7 +25,17 @@ def tokenize(text):
     # Preserve identifiers such as 34/8-A-9, and also index their components.
     compounds = re.findall(r"[a-z0-9]+(?:[./-][a-z0-9]+)+", text)
     words = re.findall(r"[a-z0-9]+", text)
-    return [w for w in words if w not in STOPWORDS] + compounds
+    # Canonicalize common asset/licence forms: PL127B == PL 127 B == PL_127B.
+    identifiers = [re.sub(r"[^a-z0-9]", "", value) for value in
+                   re.findall(r"\b[a-z]{1,5}\s*[_-]?\s*\d{2,6}\s*[a-z]?\b", text)]
+    # Basic CJK character + bigram indexing keeps the dependency-free prototype
+    # usable for Chinese documents. A production service should use a maintained
+    # language-aware analyzer in its search backend.
+    cjk = []
+    for run in re.findall(r"[\u3400-\u9fff]+", text):
+        cjk.extend(run)
+        cjk.extend(run[i:i + 2] for i in range(len(run) - 1))
+    return [w for w in words if w not in STOPWORDS] + compounds + identifiers + cjk
 
 
 @dataclass(frozen=True)
@@ -86,13 +98,33 @@ class HybridRetriever:
     def __init__(self, collection, documents, reranker, dense_k=50, sparse_k=50,
                  candidate_k=100, rrf_constant=60, threshold=0.01):
         self.collection = collection
-        self.bm25 = BM25Index(documents)
+        self._index_lock = threading.RLock()
+        self.bm25 = BM25Index([])
+        self.replace_documents(documents)
         self.reranker = reranker
         self.dense_k, self.sparse_k = dense_k, sparse_k
         self.candidate_k, self.rrf_constant = candidate_k, rrf_constant
         self.threshold = threshold
 
+    def replace_documents(self, documents):
+        """Build a new sparse snapshot, then publish it atomically."""
+        index = BM25Index(documents)
+        with self._index_lock:
+            self.bm25 = index
+
+    @staticmethod
+    def _has_empty_in_filter(value):
+        if isinstance(value, dict):
+            if "$in" in value and not value["$in"]:
+                return True
+            return any(HybridRetriever._has_empty_in_filter(item) for item in value.values())
+        if isinstance(value, list):
+            return any(HybridRetriever._has_empty_in_filter(item) for item in value)
+        return False
+
     def candidates(self, query, metadata_filters=None):
+        if metadata_filters and self._has_empty_in_filter(metadata_filters):
+            return []
         kwargs = {"where": metadata_filters} if metadata_filters else {}
         # Resolve the SAME explicit scope for both branches. Never post-filter only.
         allowed = None
@@ -106,7 +138,9 @@ class HybridRetriever:
         result = self.collection.query(query_texts=[query], n_results=min(self.dense_k, count), **kwargs)
         dense = [Hit(cid, text, meta, -distance) for cid, text, meta, distance in zip(
             result["ids"][0], result["documents"][0], result["metadatas"][0], result["distances"][0])]
-        sparse = self.bm25.search(query, self.sparse_k, allowed)
+        with self._index_lock:
+            sparse_index = self.bm25
+        sparse = sparse_index.search(query, self.sparse_k, allowed)
         return reciprocal_rank_fusion([dense, sparse], self.candidate_k, self.rrf_constant)
 
     def retrieve_documents(self, query, num_docs=5, metadata_filters=None):
@@ -117,7 +151,7 @@ class HybridRetriever:
                 return ["success", "", []]
             response = self.reranker.rerank(
                 model="rerank-english-v3.0", query=query,
-                documents=[h.text for h in hits], top_n=num_docs)
+                documents=[h.text for h in hits], top_n=min(num_docs, len(hits)))
             return ["success", "", [
                 {"text": hits[r.index].text, "metadata": hits[r.index].metadata}
                 for r in response.results if r.relevance_score >= self.threshold

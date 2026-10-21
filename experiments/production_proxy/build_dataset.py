@@ -138,7 +138,7 @@ def main():
     (DATA / "source_audit.json").write_text(json.dumps(audits, indent=2, ensure_ascii=False), encoding="utf-8")
     frozen_paths = [DATA / "documents.jsonl", DATA / "queries.jsonl", ROOT / "facts.tsv",
                     ROOT / "selection.json", ROOT / "PROTOCOL.md", ROOT / "build_dataset.py",
-                    ROOT.parents[1] / "backend/Embeddings.py"]
+                    ROOT.parent / "petroleum_retrieval/legacy_embeddings.py"]
     hashes = {str(p.relative_to(ROOT.parents[1])): sha(p) for p in frozen_paths}
     (DATA / "frozen_hashes.json").write_text(json.dumps(hashes, indent=2), encoding="utf-8")
     print(json.dumps({"pages_or_records": len(documents), "queries": len(questions),

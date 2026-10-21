@@ -130,7 +130,7 @@
 
 - `README.md`：来源、选择规则、执行命令、环境与局限。
 - `facts.tsv` / `data/queries.jsonl`：问题和证据。
-- `data/frozen_hashes.json`：冻结输入哈希；原 Embeddings.py 未修改。
+- `data/frozen_hashes.json`：冻结输入与封存纯向量基线的哈希。
 - `results/local_rankings.jsonl` / `rerank_rankings.jsonl`：逐题原始输出。
 - `results/metrics.json` / `rerank_metrics.json`：完整统计与配对区间。
 - `FAILURE_CASES.md`：可逐项核对的失败案例。

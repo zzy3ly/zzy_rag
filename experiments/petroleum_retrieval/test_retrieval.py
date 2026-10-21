@@ -62,8 +62,8 @@ class RetrievalTests(unittest.TestCase):
     def test_frozen_data_integrity_and_no_missing_gold(self):
         data = ROOT / "data"
         frozen = json.loads((data / "frozen_hashes.json").read_text())
-        old = ROOT.parents[1] / "backend/Embeddings.py"
-        self.assertEqual(hashlib.sha256(old.read_bytes()).hexdigest(), frozen["Embeddings.py"])
+        old = ROOT / "legacy_embeddings.py"
+        self.assertEqual(hashlib.sha256(old.read_bytes()).hexdigest(), frozen["legacy_embeddings.py"])
         corpus = [json.loads(l) for l in (data / "corpus.jsonl").read_text(encoding="utf-8").splitlines()]
         queries = [json.loads(l) for l in (data / "queries_reviewed.jsonl").read_text(encoding="utf-8").splitlines()]
         ids = {c["id"] for c in corpus}

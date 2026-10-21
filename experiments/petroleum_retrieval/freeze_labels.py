@@ -31,7 +31,7 @@ corpus = [json.loads(l) for l in (data / "corpus.jsonl").read_text(encoding="utf
 }, ensure_ascii=False, indent=2), encoding="utf-8")
 manifest = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in [
     data / "corpus.jsonl", data / "queries_reviewed.jsonl", ROOT / "annotations.json",
-    ROOT.parents[1] / "backend" / "Embeddings.py"]}
+    ROOT / "legacy_embeddings.py"]}
 manifest.update({"accepted": len(accepted), "test": sum(q["split"] == "test" for q in accepted),
                  "excluded": len(excluded), "small_corpus": len(ids)})
 (data / "frozen_hashes.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")

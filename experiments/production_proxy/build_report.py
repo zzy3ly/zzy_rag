@@ -151,7 +151,7 @@ def main():
              "", "## 复现与审计入口", "",
              "- `README.md`：来源、选择规则、执行命令、环境与局限。",
              "- `facts.tsv` / `data/queries.jsonl`：问题和证据。",
-             "- `data/frozen_hashes.json`：冻结输入哈希；原 Embeddings.py 未修改。",
+             "- `data/frozen_hashes.json`：冻结输入与封存纯向量基线的哈希。",
              "- `results/local_rankings.jsonl` / `rerank_rankings.jsonl`：逐题原始输出。",
              "- `results/metrics.json` / `rerank_metrics.json`：完整统计与配对区间。",
              "- `FAILURE_CASES.md`：可逐项核对的失败案例。",
@@ -185,7 +185,9 @@ def main():
         versions[package] = importlib.metadata.version(package)
     paths = list(ROOT.glob("*.py")) + list(ROOT.glob("*.tsv")) + list(ROOT.glob("*.json"))
     paths += list((ROOT / "results").glob("*.jsonl")) + list((ROOT / "data").glob("*.jsonl"))
-    paths += [PROJECT / "backend/Embeddings.py", PROJECT / "backend/HybridRetrieval.py", PROJECT / "backend/TokenChunking.py"]
+    paths += [PROJECT / "backend/Embeddings.py", PROJECT / "backend/HybridRetrieval.py",
+              PROJECT / "backend/TokenChunking.py",
+              ROOT.parent / "petroleum_retrieval/legacy_embeddings.py"]
     env = {"python": platform.python_version(), "platform": platform.platform(), "packages": versions,
            "files_sha256": {str(p.relative_to(PROJECT)): hashlib.sha256(p.read_bytes()).hexdigest() for p in paths},
            "test_commands": ["python -m unittest discover -s experiments/production_proxy -p test_protocol.py",

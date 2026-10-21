@@ -5,7 +5,7 @@
 
 ## 已完成内容
 
-- 保留原 `backend/Embeddings.py`，用 SHA-256 校验确认未修改；现有聊天入口仍使用旧方法。
+- 原纯向量入口已封存为 `legacy_embeddings.py`，用 SHA-256 校验后运行。
 - 新增 `backend/HybridRetrieval.py`：BM25、向量召回、RRF 融合与既有 Cohere 重排接口。
 - 下载固定版本 DISKOS-QA，整理全量公开问答、去重语料、评测标注及可独立查看的小数据集。
 - 完成主实验、小库复测、BM25 + 同款重排的补充对照；保存逐题排名、指标与失败案例。

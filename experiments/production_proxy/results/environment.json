@@ -11,8 +11,8 @@
     "requests": "2.32.3"
   },
   "files_sha256": {
-    "experiments\\production_proxy\\build_dataset.py": "17bfcbb264ff7d673465021fb2076e978057fbd8a88c7662ae9d182e9c2d954f",
-    "experiments\\production_proxy\\build_report.py": "06e27d9ad3846b7d1f9216abf07e5b0bac3c4f96acf58bc930f51f4bd6b52ac6",
+    "experiments\\production_proxy\\build_dataset.py": "74d23628b0465817ef21a6fe4b1770e567c86fdfbfd1fb0018af2fa72d4dfb77",
+    "experiments\\production_proxy\\build_report.py": "0a2c65b16bde6a025d55d5c7d8947f1993c114b7f6db70056591d97444b80b39",
     "experiments\\production_proxy\\download_sources.py": "31cd348607d0ca21e53e10214a0fc50de1e3eb470edadba890b6194a8b88b52d",
     "experiments\\production_proxy\\evaluate.py": "4c319f3d726b06c52fdaeeb2b059d3bc5a3857c4c735fe239f6b01489a96842d",
     "experiments\\production_proxy\\run_local.py": "e40805f5e05ba6bdf85b33f7dc0eca55a3a36fe91b1dbb36eb3f3e74ea3b89fb",
@@ -29,9 +29,10 @@
     "experiments\\production_proxy\\data\\chunks_token.jsonl": "d4713c7f46edb8caea3cd9c97b2dd6de52ab183a5a883b80c21079c2d43699b8",
     "experiments\\production_proxy\\data\\documents.jsonl": "97099cfbd3c54639614b57376dc7ae9aa68a47e0ea0bd867304d0a3078a4c94d",
     "experiments\\production_proxy\\data\\queries.jsonl": "a010f7019532a4661358028d84ac7bcc4d6add686242231089c2636b0c0bce50",
-    "backend\\Embeddings.py": "ddfb2a272186da1f2876f9f8ef93181d428a0006aaee31137d3ada172a0e6d7b",
-    "backend\\HybridRetrieval.py": "ce23991a0107ee716264ae9e3f338a11c43b6b7aa7f4e0bd4d4752631ae9d0be",
-    "backend\\TokenChunking.py": "5af805b78fd2f21d6ce0d29412e24195c213ca9d4e011aabee7fff1663697888"
+    "backend\\Embeddings.py": "8b31115997f8eb6572a184430bf9db40f75711b2e5572c02059a5d20e1c2d915",
+    "backend\\HybridRetrieval.py": "c9ffb000dc4781947826aa8949ca2f4d0ca381778c69eef9e2ddf638d76ea7d5",
+    "backend\\TokenChunking.py": "5af805b78fd2f21d6ce0d29412e24195c213ca9d4e011aabee7fff1663697888",
+    "experiments\\petroleum_retrieval\\legacy_embeddings.py": "7d211c6e19fa3da97866e62dfb0d58f34f9fd2c8e033319ded44cf1ef7dcb3c9"
   },
   "test_commands": [
     "python -m unittest discover -s experiments/production_proxy -p test_protocol.py",

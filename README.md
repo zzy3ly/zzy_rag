@@ -36,7 +36,7 @@
 
 - `backend/`：原 FastAPI RAG 原型及新增检索模块。
 - `backend/TokenChunking.py`：按嵌入模型 token 上限切分并保留源字符位置。
-- `backend/HybridRetrieval.py`：BM25、RRF 和统一权限范围过滤实现。
+- `backend/HybridRetrieval.py`：当前在线使用的 BM25、RRF 和统一权限范围过滤实现。
 - `experiments/production_proxy/`：220 题生产场景代理评测。
 - `experiments/petroleum_retrieval/`：较早的 DISKOS-QA 对照实验。
 - `frontend/`：原型前端页面。
@@ -75,8 +75,9 @@ Chroma 索引、下载原文和本地缓存都被 `.gitignore` 排除。
 
 ## 启动旧问答原型
 
-旧原型保留作为基线，包含本地 Ollama 与 OpenRouter 路径。启动前需要安装
-`backend/requirements.txt`，并将旧代码里的本地凭据加载方式改成自己的环境配置。
+LLM 生成部分仍保留原型的本地 Ollama 与 OpenRouter 路径。检索入口已经切换为
+Dense Top50 + BM25 Top50 + RRF(60) + Cohere 重排。Cohere 凭据从
+`COHERE_API_KEY` 或本地忽略文件 `backend/cohere.txt` 读取。
 
 ```powershell
 Set-Location backend
@@ -91,5 +92,6 @@ uvicorn FastAPI:app --port 8000 --reload
 - 目前的权限与版本实验使用显式元数据上下文，尚未接入真实身份认证。
 - 无答案题仍会召回相似文本，尚未实现可靠拒答器。
 - 本地离线实验不是并发、吞吐量或生产 SLA 测试。
+- 可用 `git switch --detach legacy-vector-baseline` 查看升级前的纯向量版本。
 - 详细失败案例见
   [FAILURE_CASES.md](experiments/production_proxy/FAILURE_CASES.md)。

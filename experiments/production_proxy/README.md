@@ -1,7 +1,7 @@
 # 油气知识库生产场景代理评测 v2
 
 本实验评估检索，不运行回答生成，不代表中石油线上系统。旧实验位于
-`../petroleum_retrieval`，原业务 `backend/Embeddings.py` 保留。
+`../petroleum_retrieval`；原纯向量方法封存于该目录的 `legacy_embeddings.py`。
 
 ## 数据来源与取样
 

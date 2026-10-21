@@ -1,8 +1,8 @@
 # 公开油气语料：原始检索与混合检索对照实验
 
 本目录用于验证“BM25 + 向量混合召回是否优于现有单路向量召回”，不预设一定提升。
-原 `backend/Embeddings.py`、业务数据库、现有 Chroma 索引和聊天接口均不改动。
-新实现为 `backend/HybridRetrieval.py`，由本目录脚本实际调用。
+实验运行时原 `backend/Embeddings.py`、业务数据库、Chroma 索引和聊天入口均未改动。
+该纯向量方法现封存于 `legacy_embeddings.py`，因此线上入口升级后仍能复现实验。
 
 ## 数据来源与许可
 
@@ -83,10 +83,9 @@
 候选上限相同，但混合去重后往往少于 100 条，报告实际候选数。
 另输出 BM25-only 作为第一阶段诊断，它没有重排，不能冒充同设置的完整链路比较。
 
-为了保留旧实现，脚本通过 `EmbeddingHandler.__new__` 注入实验 collection 和
-带缓存的 Cohere 客户端，只绕过构造器中的旧机器路径及上传器初始化。
-实际执行的是原文件的 `retrieve_documents` 方法，没有重写基线逻辑。
-`data/frozen_hashes.json` 记录原文件 SHA-256，运行前校验。
+为了保留旧实现，脚本通过 `LegacyEmbeddingHandler.__new__` 注入实验 collection
+和带缓存的 Cohere 客户端，只绕过构造器。实际执行的是封存的原始
+`retrieve_documents` 方法；`data/frozen_hashes.json` 记录其 SHA-256。
 
 运行环境使用本机已安装的 Chroma 0.6.3；旧 requirements 声明的是 0.4.24。
 因此可说“同一环境、同一模型、原方法对照”，不可说完全复原了历史依赖环境。
@@ -156,6 +155,6 @@ Candidate Recall@100 测重排前集合，混合集合可能不足 100。
 显式 metadata filter 会作用于两路候选，空授权范围不会回退为全库查询。
 身份与权限范围必须由上游服务端确定，本模块不提供认证。
 
-本轮没有将新方法默认为线上聊天入口：现有功能继续使用旧方法，避免未经验证切换。
-内存 BM25 是静态小规模索引，新增/删除文档后应重建快照；
+主分支现在已将该方法接入线上 `EmbeddingHandler`；旧入口可通过 Git 标签
+`legacy-vector-baseline` 恢复。内存 BM25 在新增/删除文档后自动重建快照；
 不是分布式搜索服务或完整的生产权限系统。

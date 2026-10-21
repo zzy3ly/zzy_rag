@@ -22,7 +22,8 @@ import cohere
 ROOT = Path(__file__).resolve().parent
 PROJECT = ROOT.parents[1]
 sys.path.insert(0, str(PROJECT / "backend"))
-from Embeddings import EmbeddingHandler
+sys.path.insert(0, str(ROOT))
+from legacy_embeddings import LegacyEmbeddingHandler
 from HybridRetrieval import HybridRetriever
 
 
@@ -85,7 +86,7 @@ def main():
         ("corpus.jsonl", data / "corpus.jsonl"),
         ("queries_reviewed.jsonl", data / "queries_reviewed.jsonl"),
         ("annotations.json", ROOT / "annotations.json"),
-        ("Embeddings.py", PROJECT / "backend/Embeddings.py")
+        ("legacy_embeddings.py", ROOT / "legacy_embeddings.py")
     ]:
         assert hashlib.sha256(path.read_bytes()).hexdigest() == frozen[filename], f"Frozen input changed: {filename}"
     corpus_name = "corpus_small.jsonl" if args.small_corpus else "corpus.jsonl"
@@ -114,7 +115,7 @@ def main():
     reranker = RecordedReranker(cohere.Client(key, timeout=90), cache / "rerank")
     # Bypass only constructor side effects (absolute credential path/upload parser).
     # The actual legacy retrieve_documents body is invoked verbatim.
-    legacy = EmbeddingHandler.__new__(EmbeddingHandler)
+    legacy = LegacyEmbeddingHandler.__new__(LegacyEmbeddingHandler)
     legacy.collection, legacy.co, legacy.similarity_score = collection, reranker, 0.01
     hybrid = HybridRetriever(collection, [
         {"id": d["id"], "text": d["text"], "metadata": {

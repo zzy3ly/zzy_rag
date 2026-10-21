@@ -7,10 +7,11 @@ import os
 import requests
 import re
 from io import BytesIO
+from pathlib import Path
 
 # 设置支持文件类型，初始化文件切割，将文件切成小块，读取api key
 class UploadHandler:
-    def __init__(self, chunk_size: int = 1000):
+    def __init__(self, chunk_size: int = 1000, scraping_key=None):
         self.valid_file_types = ['.html', '.txt']
         self.html_transformer = Html2TextTransformer()
         self.chunk_size = chunk_size
@@ -25,8 +26,10 @@ class UploadHandler:
         self.h.ignore_links = True
         self.h.ignore_images = True
         self.h.ignore_emphasis = True
-        with open('D:\\UserData\\Downloads\\Intelligent-QA-Chatbot\\Intelligent-QA-Chatbot\\backend\\scrapingant.txt', 'r') as file:
-            self.scraping_key = file.read().strip()
+        key_file = Path(__file__).with_name("scrapingant.txt")
+        self.scraping_key = scraping_key or os.environ.get("SCRAPINGANT_API_KEY", "").strip()
+        if not self.scraping_key and key_file.exists():
+            self.scraping_key = key_file.read_text(encoding="utf-8").strip()
 
         
  # 获取文件扩展名，根据扩展名选择方法       
@@ -76,6 +79,8 @@ class UploadHandler:
         
     def handle_urls(self, urls: List[str], filename: str):
         try:
+            if not self.scraping_key:
+                return ["error", "SCRAPINGANT_API_KEY is required for URL ingestion"]
             all_chunks = []
             for url in urls:
                 params = {
@@ -84,7 +89,9 @@ class UploadHandler:
                     'proxy_country': 'US',
                     'return_page_source': 'true'
                 }
-                response = requests.get('https://api.scrapingant.com/v2/general', params=params)
+                response = requests.get(
+                    'https://api.scrapingant.com/v2/general', params=params, timeout=60)
+                response.raise_for_status()
                 # print(f"Response status code: {response}")
                 data = response.text
                 # print(f"Data type: {data}")
