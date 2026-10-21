@@ -1,0 +1,34 @@
+{
+  "token": {
+    "chunks": 1584,
+    "over_256": 0,
+    "median_tokens": 250.5,
+    "max_tokens": 256
+  },
+  "legacy1000": {
+    "chunks": 1369,
+    "over_256": 289,
+    "median_tokens": 210.0,
+    "max_tokens": 876
+  },
+  "page": {
+    "chunks": 808,
+    "over_256": 406,
+    "median_tokens": 258.0,
+    "max_tokens": 1667
+  },
+  "model": "all-MiniLM-L6-v2 (Chroma ONNX)",
+  "dimension": 384,
+  "model_sha256": "4f148ba8ae9c2c7fbee4af2b132db8d06c6a6545b47fc83bbb98c3d22b8393e6",
+  "distance": "exact normalized dot product; L2-equivalent ranking",
+  "query_embedding_max_tokens": 63,
+  "title_prefix_for_all_methods": true,
+  "overlap_tokens": 32,
+  "scope_and_clarification_rules": "same for all gated methods; context supplied explicitly",
+  "hybrid": {
+    "dense_k": 50,
+    "bm25_k": 50,
+    "rrf_constant": 60
+  },
+  "candidate_budget": 100
+}

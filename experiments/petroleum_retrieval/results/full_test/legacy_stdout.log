@@ -1,0 +1,300 @@
+query received: For well 34/8-A-9 H during clean-out, how do the scraped depths for the production packer compare to those for the tieback packer?
+number of documents requested: 5
+metadata filters: None
+querying without metadata filters.
+top N documents to rerank: 5
+0.9383503 8
+0.03803509 18
+0.022243667 50
+0.020488555 3
+0.018905446 15
+query received: For well 6507/7-A-56, what contingency measures should be implemented if cement losses occur while running the 7" liner isolating Ile to Garn over ~37m?
+number of documents requested: 5
+metadata filters: None
+querying without metadata filters.
+top N documents to rerank: 5
+0.99993026 0
+0.08678673 19
+0.04001227 10
+0.022889841 18
+0.002822833 48
+query received: How do WOB, RPM, and flow rate compare between 8½ AutoTrak and 12¼ AutoTrak BHAs?
+number of documents requested: 5
+metadata filters: None
+querying without metadata filters.
+top N documents to rerank: 5
+0.9987005 95
+0.98761624 72
+0.8478418 39
+0.6620321 65
+0.13296424 40
+query received: What are the comparative proportions of quartz, feldspar, and mica in LUNDE FM cores from siltstone, conglomerate, and sandstone lithologies?
+number of documents requested: 5
+metadata filters: None
+querying without metadata filters.
+top N documents to rerank: 5
+0.8996516 0
+0.8736466 2
+0.77063745 1
+0.70058763 24
+0.6548947 4
+query received: For Mandal FM well 1/6-6 formation ditch gas: what are the min/max, top and bottom averages, and C1-C5 ppm ranges?
+number of documents requested: 5
+metadata filters: None
+querying without metadata filters.
+top N documents to rerank: 5
+0.4190535 69
+0.19223589 64
+0.032589745 38
+0.022977369 26
+0.0034429806 75
+query received: What are the dominant lithologies in the Quaternary (103–570 m) and Pliocene intervals of TOMMELITEN A well 1/9-1?
+number of documents requested: 5
+metadata filters: None
+querying without metadata filters.
+top N documents to rerank: 5
+0.98959166 7
+0.9071478 16
+0.7252596 49
+0.692226 5
+0.5030593 33
+query received: Compare sand fraction, lithology, and log signatures of Nordland GP versus Hordaland GP in wells 9/2-A-1 and 9/2-4.
+number of documents requested: 5
+metadata filters: None
+querying without metadata filters.
+top N documents to rerank: 5
+0.9638481 1
+0.9400236 2
+0.9396923 78
+0.9183339 17
+0.87779135 0
+query received: For well 34/7-J-7, how did pump rates at 2713 MD (after two LCM pills) compare to pump rates at 2722 MD when losses recurred?
+number of documents requested: 5
+metadata filters: None
+querying without metadata filters.
+top N documents to rerank: 5
+0.99999845 0
+0.93318766 8
+0.25757828 20
+0.23475733 22
+0.19467382 61
+query received: What MDT pressure points were recorded and how many valid measurements were obtained for well 34/10-A-46?
+number of documents requested: 5
+metadata filters: None
+querying without metadata filters.
+top N documents to rerank: 5
+0.99960953 20
+0.99596137 61
+0.99135584 9
+0.9871788 80
+0.9626028 8
+query received: What volume (litres) of 31° API oil was recovered from the Wedge IIa hydrocarbon interval of well 7120/1-2?
+number of documents requested: 5
+metadata filters: None
+querying without metadata filters.
+top N documents to rerank: 5
+0.99999726 3
+0.199308 15
+0.17938675 0
+0.16317856 6
+0.05399884 37
+query received: Do drilling parameters, sonic logs, and RFTs indicate abnormal pressures in the Upper Nordland Group?
+number of documents requested: 5
+metadata filters: None
+querying without metadata filters.
+top N documents to rerank: 5
+0.9999919 0
+0.9999714 1
+0.997981 13
+0.99679 2
+0.98475236 3
+query received: Which primary measured outputs and sample requirements distinguish STT triaxial tests from Dean-Stark saturation analyses?
+number of documents requested: 5
+metadata filters: None
+querying without metadata filters.
+top N documents to rerank: 5
+0.13262685 5
+0.057281975 2
+0.052327625 1
+0.014899643 29
+0.0034429806 63
+query received: For Hugin and Sleipner core analyses, what net confining sleeve pressures were used for helium porosity and nitrogen permeability measurements?
+number of documents requested: 5
+metadata filters: None
+querying without metadata filters.
+top N documents to rerank: 5
+0.9999956 0
+0.9996049 10
+0.99941623 7
+0.9984269 1
+0.9984269 2
+query received: What net-sand porosity and shale-volume cut-offs were used for the Lunde FM, and how was the porosity cut-off derived?
+number of documents requested: 5
+metadata filters: None
+querying without metadata filters.
+top N documents to rerank: 5
+0.9920002 22
+0.9851003 0
+0.9672869 55
+0.91006696 6
+0.79486305 24
+query received: Which of the following intervals in well 25/7-2 are likely producible hydrocarbons: Upper Jurassic fan sands/conglomerates, Middle Jurassic Hugin, and Sleipner?
+number of documents requested: 5
+metadata filters: None
+querying without metadata filters.
+top N documents to rerank: 5
+0.9999981 10
+0.99711037 44
+0.93674946 29
+0.92696756 18
+0.8850366 24
+query received: What was Tor Fm formation-water salinity (ppm) measured at ~265°F in TOMMELITEN GAMMA well 1/9-5?
+number of documents requested: 5
+metadata filters: None
+querying without metadata filters.
+top N documents to rerank: 5
+0.99979657 2
+0.23074637 5
+0.08195955 3
+0.05686155 75
+0.019985152 6
+query received: Based on DXC, sonic, gas trends and FMTs, how does the pore-pressure gradient evolve between 1250 and 1395 m in well 6507/8-3?
+number of documents requested: 5
+metadata filters: None
+querying without metadata filters.
+top N documents to rerank: 5
+0.9999509 20
+0.97467697 55
+0.921499 10
+0.89533985 52
+0.8893368 17
+query received: Did underbalanced perforation or low-rate backflush in well 31/6-6 SOGNEFJORD FM pre-gravel-pack cause sand production?
+number of documents requested: 5
+metadata filters: None
+querying without metadata filters.
+top N documents to rerank: 5
+0.9891816 9
+0.0016941031 25
+0.0009735438 89
+0.00096975197 3
+0.0008559007 8
+query received: For VSP processing, how do deconvolution operator length and spatial window compare to chosen bandpass filter frequency ranges and settings?
+number of documents requested: 5
+metadata filters: None
+querying without metadata filters.
+top N documents to rerank: 5
+0.99857306 0
+0.9962346 1
+0.99002504 11
+0.98892784 13
+0.9834705 4
+query received: For well P-23 Y1H, what are the planned landing formation, ITBS length, and total horizontal length?
+number of documents requested: 5
+metadata filters: None
+querying without metadata filters.
+top N documents to rerank: 5
+0.99980444 24
+0.9348725 9
+0.8275496 59
+0.25423113 4
+0.033972 55
+query received: For well 7122/7-2, what are the formulas, computational steps, and physical meanings distinguishing average velocity (SRD→GEO) versus RMS velocity?
+number of documents requested: 5
+metadata filters: None
+querying without metadata filters.
+top N documents to rerank: 5
+0.89733595 0
+0.086169556 24
+0.0067975316 39
+0.0029926654 57
+0.0026730062 23
+query received: In Y2H, which is more likely to cause high M-sand/C-sand: deeper-than-prognosed reservoir depth or heterolithic infill?
+number of documents requested: 5
+metadata filters: None
+querying without metadata filters.
+top N documents to rerank: 5
+0.007815889 25
+2.8188664e-05 27
+2.8188664e-05 70
+2.7321414e-05 77
+1.0783312e-05 65
+query received: How does KRISTIN-specific mudlogging differ from standard mudlogging regarding recording organic contaminants and using gas scales up to C5?
+number of documents requested: 5
+metadata filters: None
+querying without metadata filters.
+top N documents to rerank: 5
+0.9881309 0
+0.033526164 25
+0.00619299 17
+0.0020911063 77
+0.00059071044 42
+query received: How do GR, RHOB, and ILD/MSFL resistivity logs distinguish sands from carbonaceous mudstones in petrophysical interpretation?
+number of documents requested: 5
+metadata filters: None
+querying without metadata filters.
+top N documents to rerank: 5
+0.987375 0
+0.9785903 61
+0.9103862 93
+0.7709825 64
+0.7602949 1
+query received: How do GR, RHOB, and NPHI responses differ between mudstone and fine sand within coarsening-upward cycles?
+number of documents requested: 5
+metadata filters: None
+querying without metadata filters.
+top N documents to rerank: 5
+0.998147 0
+0.1887722 80
+0.07068779 34
+0.01384861 38
+0.0062170783 96
+query received: For the KVITEBJØRN well-log VSP on Well 34/11-1 (970–4400 m), what is the number of final direct-arrival times?
+number of documents requested: 5
+metadata filters: None
+querying without metadata filters.
+top N documents to rerank: 5
+0.99998105 39
+0.10631887 99
+0.087096825 32
+0.071332 69
+0.04169577 9
+query received: How do total MDT pressure points compare to valid MDT recordings in well 30/6-E-9?
+number of documents requested: 5
+metadata filters: None
+querying without metadata filters.
+top N documents to rerank: 5
+0.9991272 3
+0.99368566 2
+0.9503189 65
+0.77321637 43
+0.7246755 47
+query received: Were any major items (e.g., drill collars) lost during the 1985 7317/2-U-1 shallow drilling survey?
+number of documents requested: 5
+metadata filters: None
+querying without metadata filters.
+top N documents to rerank: 5
+0.97962874 0
+0.009898064 84
+0.0036642202 23
+0.003649987 51
+0.0029349518 13
+query received: Which wells penetrated the Lysing Formation, and what was 6507/2-3's RKB interval?
+number of documents requested: 5
+metadata filters: None
+querying without metadata filters.
+top N documents to rerank: 5
+0.9951703 8
+0.9889705 12
+0.96653706 23
+0.8899121 40
+0.8520759 62
+query received: How do the 1985 shallow-probe and downhole heat-flow survey results at well 7425/9-U-1 differ, and what calibration method was used?
+number of documents requested: 5
+metadata filters: None
+querying without metadata filters.
+top N documents to rerank: 5
+0.9996724 6
+0.97719735 41
+0.9549844 99
+0.09947021 96
+0.024987794 95

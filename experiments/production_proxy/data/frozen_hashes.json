@@ -1,0 +1,9 @@
+{
+  "experiments\\production_proxy\\data\\documents.jsonl": "97099cfbd3c54639614b57376dc7ae9aa68a47e0ea0bd867304d0a3078a4c94d",
+  "experiments\\production_proxy\\data\\queries.jsonl": "a010f7019532a4661358028d84ac7bcc4d6add686242231089c2636b0c0bce50",
+  "experiments\\production_proxy\\facts.tsv": "56cca34d8d80021f076a6102ae5248142d16b6b34ae6268206854849532b6969",
+  "experiments\\production_proxy\\selection.json": "6430687b58062d764f527860c6d3b51ca576e4a32c61fdb518e3312549b505bd",
+  "experiments\\production_proxy\\PROTOCOL.md": "9aa1cee4eeb5e777725ac861d66a5f484e0f2863a1e0900f76f29fa5d40c2acc",
+  "experiments\\production_proxy\\build_dataset.py": "17bfcbb264ff7d673465021fb2076e978057fbd8a88c7662ae9d182e9c2d954f",
+  "backend\\Embeddings.py": "ddfb2a272186da1f2876f9f8ef93181d428a0006aaee31137d3ada172a0e6d7b"
+}

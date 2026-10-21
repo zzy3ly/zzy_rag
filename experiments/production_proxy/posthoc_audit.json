@@ -1,0 +1,37 @@
+{
+  "status": "Post-result audit; original frozen labels and primary metrics unchanged",
+  "reviewer": "AI assistant, not a petroleum subject-matter expert",
+  "findings": [
+    {
+      "query_ids": ["public-f053-paraphrase"],
+      "type": "underspecified_query",
+      "finding": "The paraphrase refers to 'those two remaining opportunities' without naming Caro Kann and Serpe or providing conversation history. Licence 229 provides some context but does not guarantee unique reference. Treat this as a questionable answerable label.",
+      "handling": "Keep the frozen primary result. Also report sensitivity excluding this query from ordinary recall. Do not claim this exclusion was pre-registered.",
+      "future_revision": "Name Caro Kann and Serpe explicitly, or retain the wording as a clarification example with conversation-state requirements."
+    },
+    {
+      "query_ids": ["public-f056-paraphrase"],
+      "type": "cross_report_entity_and_time_ambiguity",
+      "finding": "The query names Mackerel and Herring but not the report or decision date. PL972 is a real distractor discussing the same assets; the annotated explanation is in PL407. Gold evidence is valid, but other reporting periods and equivalent support have not been exhaustively adjudicated.",
+      "handling": "Retain primary labels; flag for expert review. Do not treat every non-gold hit about these assets as definitely irrelevant."
+    },
+    {
+      "query_ids": ["public-f009-direct", "public-f009-paraphrase", "public-03-multi"],
+      "type": "identifier_normalization_failure",
+      "finding": "Questions use PL127B, while the source title uses PL_127B and source prose often uses PL 127 or PL 127 B. Current lexical tokenizer does not canonicalize these variants. Correct evidence is outside the candidate budget for the deadline question.",
+      "handling": "Do not tune after observing test results. Recommend a generic identifier normalization change evaluated on a fresh holdout."
+    },
+    {
+      "query_ids": ["public-f023-direct"],
+      "type": "candidate_budget_allocation_failure",
+      "finding": "Both single branches contain full annotated evidence within their top 100, but dense50 plus BM25-50 union misses it. Equal total candidate budget does not imply that hybrid candidates contain each single branch's top 100.",
+      "handling": "Retain failure. Report that the 50/50 split can sacrifice sparse-only or dense-only tail evidence."
+    }
+  ],
+  "global_limits": [
+    "No exhaustive expert candidate-pool judgments",
+    "Full annotated-span coverage is stricter than merely containing enough words to answer",
+    "Question wording was authored from evidence and can favor lexical matching",
+    "Synthetic policy checks are template-based functional tests and must not inflate public retrieval metrics"
+  ]
+}

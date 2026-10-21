@@ -1,0 +1,8 @@
+{
+  "embedding_max_length": 256,
+  "passages": 1628,
+  "passages_over_256_tokens": 1307,
+  "median_tokens": 384.0,
+  "max_tokens": 2234,
+  "note": "Chroma default embedding truncates to 256 tokens; BM25 and reranker receive full source text in both relevant branches."
+}

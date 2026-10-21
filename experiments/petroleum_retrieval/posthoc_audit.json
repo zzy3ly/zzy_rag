@@ -1,0 +1,28 @@
+{
+  "phase": "After primary evaluation; does not modify frozen primary qrels",
+  "reviewer": "AI assistant, not a petroleum subject-matter expert",
+  "findings": [
+    {
+      "review_index": 7,
+      "finding": "The legacy top result discusses a different well (7/12-9), while the labeled source concerns well 1/6-6. Exact well and gas-range evidence was missing from the legacy candidates.",
+      "scope": "Inspection of returned text; not exhaustive corpus relevance adjudication."
+    },
+    {
+      "review_index": 18,
+      "finding": "Legacy results include similar cutoff discussions for Lange/Tilje, Melke, and Ile/Tilje/Are rather than the labeled Lunde passage. Similar wording is not evidence that the same formation has the same requirements.",
+      "scope": "Inspection of returned text; not exhaustive corpus relevance adjudication."
+    },
+    {
+      "review_index": 29,
+      "finding": "Legacy final list was empty after the shared relevance threshold. Hybrid retrieved the passage attributing high M-sand/C-sand mainly to deeper-than-prognosed reservoir depth.",
+      "scope": "Known reference evidence retrieval, not engineering answer validation."
+    },
+    {
+      "review_index": 38,
+      "finding": "The legacy ranking also includes an unjudged passage discussing Lysing formation pressure and nearby wells, which may provide alternative partial evidence. Thus the difference in known-reference Recall cannot be equated with failure to answer this question.",
+      "unjudged_potentially_relevant_id": "7e17e890958404b4ba8fdcbc",
+      "scope": "Flags incomplete qrels; no outcome-driven silent changes to the frozen labels."
+    }
+  ],
+  "recommendation": "Before claiming expert-grade business recall, pool candidates from all systems, blind their method identities, obtain domain review, and evaluate again on a larger untouched query set."
+}

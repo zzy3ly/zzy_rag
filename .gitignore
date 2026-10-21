@@ -1,0 +1,39 @@
+# Credentials and local configuration
+.env
+.env.*
+!.env.example
+backend/cohere.txt
+backend/openrouter.txt
+backend/scrapingant.txt
+
+# Local databases, vector indexes and model/API caches
+*.db
+*.sqlite
+*.sqlite3
+chromadb/
+**/chromadb/
+**/cache/
+
+# Downloaded source corpora (recreated by the documented scripts)
+experiments/**/raw/
+experiments/production_proxy/source_review.txt
+
+# Python and tooling
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Local test fixtures and personal files
+backend/test.txt
+backend/test.zip
+*.docx
+
+# Editors / operating systems
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,99 @@
+{
+  "subset": {
+    "rule": "One hash-selected paraphrase + multi-evidence question per test public report",
+    "query_ids": [
+      "public-f005-paraphrase",
+      "public-01-multi",
+      "public-f008-paraphrase",
+      "public-02-multi",
+      "public-f010-paraphrase",
+      "public-03-multi",
+      "public-f012-paraphrase",
+      "public-04-multi",
+      "public-f020-paraphrase",
+      "public-06-multi",
+      "public-f021-paraphrase",
+      "public-07-multi",
+      "public-f025-paraphrase",
+      "public-08-multi",
+      "public-f028-paraphrase",
+      "public-09-multi",
+      "public-f035-paraphrase",
+      "public-11-multi",
+      "public-f037-paraphrase",
+      "public-12-multi",
+      "public-f041-paraphrase",
+      "public-13-multi",
+      "public-f042-paraphrase",
+      "public-14-multi",
+      "public-f049-paraphrase",
+      "public-16-multi",
+      "public-f052-paraphrase",
+      "public-17-multi",
+      "public-f054-paraphrase",
+      "public-18-multi",
+      "public-f058-paraphrase",
+      "public-19-multi"
+    ],
+    "methods": [
+      "token_dense",
+      "bm25",
+      "hybrid"
+    ],
+    "model": "rerank-english-v3.0",
+    "top_n": 5,
+    "threshold": 0.01
+  },
+  "aggregates": {
+    "token_dense": {
+      "n": 32,
+      "evidence_recall@5": 0.84375,
+      "all_evidence@5": 0.75,
+      "hit@5": 0.9375
+    },
+    "bm25": {
+      "n": 32,
+      "evidence_recall@5": 0.9375,
+      "all_evidence@5": 0.875,
+      "hit@5": 1.0
+    },
+    "hybrid": {
+      "n": 32,
+      "evidence_recall@5": 0.9375,
+      "all_evidence@5": 0.875,
+      "hit@5": 1.0
+    }
+  },
+  "paired": [
+    {
+      "baseline": "token_dense",
+      "challenger": "hybrid",
+      "metric": "evidence_recall@5",
+      "n": 32,
+      "independent_source_families": 16,
+      "delta_pp": 9.375,
+      "family_bootstrap_95ci_pp": [
+        1.5625,
+        18.75
+      ],
+      "improved": 4,
+      "regressed": 0,
+      "unchanged": 28
+    },
+    {
+      "baseline": "bm25",
+      "challenger": "hybrid",
+      "metric": "evidence_recall@5",
+      "n": 32,
+      "independent_source_families": 16,
+      "delta_pp": 0.0,
+      "family_bootstrap_95ci_pp": [
+        0.0,
+        0.0
+      ],
+      "improved": 0,
+      "regressed": 0,
+      "unchanged": 32
+    }
+  ]
+}

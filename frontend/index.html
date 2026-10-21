@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>问答系统</title>
+</head>
+<body>
+    <div class="container">
+        <h1>上传文档</h1>
+        <input type="file" id="fileInput" />
+        <input type="text" id="collectionId" placeholder="输入集合ID" />
+        <button id="uploadButton">上传</button>
+
+        <h2>预加载问题</h2>
+        <div id="preloadedQuestions"></div>
+
+        <h1>问答系统</h1>
+        <textarea id="userInput" placeholder="请输入您的问题..."></textarea>
+        <button id="submitBtn">提交</button>
+        <div id="response"></div>
+    </div>
+
+    <script>
+        // 加载预定义问题
+        fetch('http://localhost:8000/dataset')  // 假设您有一个接口来获取数据集
+            .then(response => response.json())
+            .then(data => {
+                const preloadedQuestionsDiv = document.getElementById('preloadedQuestions');
+                data.forEach(item => {
+                    const questionElement = document.createElement('div');
+                    questionElement.innerHTML = `<strong>问题:</strong> ${item.question} <br> <strong>答案:</strong> ${item.answer}`;
+                    preloadedQuestionsDiv.appendChild(questionElement);
+                });
+            })
+            .catch(error => console.error('加载数据集时出错:', error));
+
+        document.getElementById('uploadButton').addEventListener('click', () => {
+            const fileInput = document.getElementById('fileInput');
+            const collectionId = document.getElementById('collectionId').value;
+            const file = fileInput.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('collection_id', collectionId); // 添加集合ID
+
+            fetch('http://localhost:8000/process_file/', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                }
+                throw new Error('上传失败');
+            })
+            .then(data => {
+                console.log('成功:', data);
+            })
+            .catch(error => {
+                console.error('错误:', error);
+            });
+        });
+    </script>
+    <script src="script.js"></script>
+</body>
+</html>

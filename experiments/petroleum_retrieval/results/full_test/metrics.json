@@ -1,0 +1,170 @@
+{
+  "run": "full_test",
+  "manifest": {
+    "run": "full_test",
+    "corpus_count": 1628,
+    "query_count": 30,
+    "corpus_sha256": "500893a9ed0be8a1a35d533fd78b1ef04c2ae0d78e0824a52b9f542b4aeadc49",
+    "frozen_inputs": {
+      "corpus.jsonl": "500893a9ed0be8a1a35d533fd78b1ef04c2ae0d78e0824a52b9f542b4aeadc49",
+      "queries_reviewed.jsonl": "77f7e68c1ed79d9032cbfdb0f44bd958bc78404b86c32705df6c54c4fbf9f4bf",
+      "annotations.json": "7f41615ecb9a726cf300b2114f05ad26ee2356c167b191fec2b1e7a4a6ad23c5",
+      "Embeddings.py": "ddfb2a272186da1f2876f9f8ef93181d428a0006aaee31137d3ada172a0e6d7b",
+      "accepted": 38,
+      "test": 30,
+      "excluded": 2,
+      "small_corpus": 171
+    },
+    "embedding": "Chroma default ONNX all-MiniLM-L6-v2; 384 dimensions; default truncation",
+    "distance": "L2",
+    "reranker": "rerank-english-v3.0",
+    "threshold": 0.01,
+    "dense_candidates": 100,
+    "hybrid_dense": 50,
+    "hybrid_bm25": 50,
+    "rrf_constant": 60,
+    "bm25_k1": 1.5,
+    "bm25_b": 0.75,
+    "final_k": 5,
+    "legacy_code": "unmodified EmbeddingHandler.retrieve_documents; constructor bypass only",
+    "segmentation": "Shared released source passages, whitespace normalized; no re-chunking",
+    "tuning": "None. All parameters fixed before first retrieval run.",
+    "python": "3.13.1 (tags/v3.13.1:0671451, Dec  3 2024, 19:06:28) [MSC v.1942 64 bit (AMD64)]",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "packages": {
+      "chromadb": "0.6.3",
+      "cohere": "5.14.0",
+      "onnxruntime": "1.20.1",
+      "numpy": "2.2.3"
+    },
+    "timing_note": "API pacing excluded; cached runs retain original reranker duration but are not live latency samples.",
+    "timestamp_utc": "2026-10-20T06:55:18Z"
+  },
+  "metrics": {
+    "legacy_dense_rerank": {
+      "recall_at_5": 0.8722222222222221,
+      "hit_at_5": 0.9,
+      "mrr_at_5": 0.9,
+      "ndcg_at_5": 0.8745595356982593,
+      "all_evidence_at_5": 0.8333333333333334,
+      "candidate_recall_at_100": 0.8833333333333333,
+      "candidate_hit_at_100": 0.9,
+      "first_stage_recall_at_5": 0.5166666666666667,
+      "candidate_count": 100.0,
+      "live_latency_sample_count": 30,
+      "p50_seconds": 2.0111077500002468,
+      "p95_seconds": 4.313342949999739
+    },
+    "hybrid_rrf_rerank": {
+      "recall_at_5": 0.9888888888888888,
+      "hit_at_5": 1.0,
+      "mrr_at_5": 0.9566666666666667,
+      "ndcg_at_5": 0.952038074271217,
+      "all_evidence_at_5": 0.9666666666666667,
+      "candidate_recall_at_100": 1.0,
+      "candidate_hit_at_100": 1.0,
+      "first_stage_recall_at_5": 0.85,
+      "candidate_count": 87.03333333333333,
+      "live_latency_sample_count": 30,
+      "p50_seconds": 1.975908399999935,
+      "p95_seconds": 3.87816918500016
+    },
+    "bm25_only": {
+      "recall_at_5": 0.9666666666666667,
+      "hit_at_5": 1.0,
+      "mrr_at_5": 0.9066666666666666,
+      "ndcg_at_5": 0.9127820999797457,
+      "all_evidence_at_5": 0.9333333333333333,
+      "candidate_recall_at_100": 1.0,
+      "candidate_hit_at_100": 1.0,
+      "first_stage_recall_at_5": 0.9666666666666667,
+      "candidate_count": 100.0,
+      "live_latency_sample_count": 0,
+      "p50_seconds": null,
+      "p95_seconds": null
+    },
+    "bm25_rerank": {
+      "recall_at_5": 0.9888888888888888,
+      "hit_at_5": 1.0,
+      "mrr_at_5": 0.9566666666666667,
+      "ndcg_at_5": 0.952038074271217,
+      "all_evidence_at_5": 0.9666666666666667,
+      "candidate_recall_at_100": 1.0,
+      "candidate_hit_at_100": 1.0,
+      "first_stage_recall_at_5": 0.9666666666666667,
+      "candidate_count": 100.0,
+      "live_latency_sample_count": 30,
+      "p50_seconds": 1.089035599999261,
+      "p95_seconds": 1.2490056200031177
+    }
+  },
+  "comparison": {
+    "mean_delta": 0.11666666666666667,
+    "cluster_bootstrap_95_ci": [
+      0.017241379310344827,
+      0.2413793103448276
+    ],
+    "clusters": 29,
+    "improved_queries": 4,
+    "regressed_queries": 0,
+    "unchanged_queries": 26
+  },
+  "by_topic": {
+    "Drilling": {
+      "legacy_dense_rerank": 1.0,
+      "hybrid_rrf_rerank": 1.0,
+      "bm25_only": 0.8333333333333334,
+      "bm25_rerank": 1.0
+    },
+    "Geology": {
+      "legacy_dense_rerank": 0.6666666666666666,
+      "hybrid_rrf_rerank": 0.9166666666666666,
+      "bm25_only": 1.0,
+      "bm25_rerank": 0.9166666666666666
+    },
+    "Petrophysics": {
+      "legacy_dense_rerank": 1.0,
+      "hybrid_rrf_rerank": 1.0,
+      "bm25_only": 1.0,
+      "bm25_rerank": 1.0
+    },
+    "Rock and Core": {
+      "legacy_dense_rerank": 0.6666666666666666,
+      "hybrid_rrf_rerank": 1.0,
+      "bm25_only": 1.0,
+      "bm25_rerank": 1.0
+    },
+    "Test fluid and pressure": {
+      "legacy_dense_rerank": 1.0,
+      "hybrid_rrf_rerank": 1.0,
+      "bm25_only": 1.0,
+      "bm25_rerank": 1.0
+    },
+    "VSP - Well seismic": {
+      "legacy_dense_rerank": 0.75,
+      "hybrid_rrf_rerank": 1.0,
+      "bm25_only": 1.0,
+      "bm25_rerank": 1.0
+    },
+    "Well-Log": {
+      "legacy_dense_rerank": 1.0,
+      "hybrid_rrf_rerank": 1.0,
+      "bm25_only": 1.0,
+      "bm25_rerank": 1.0
+    },
+    "Wellbore / well path": {
+      "legacy_dense_rerank": 0.875,
+      "hybrid_rrf_rerank": 1.0,
+      "bm25_only": 0.875,
+      "bm25_rerank": 1.0
+    }
+  },
+  "hybrid_minus_bm25_rerank": {
+    "mean_delta": 0.0,
+    "cluster_bootstrap_95_ci": [
+      0.0,
+      0.0
+    ],
+    "clusters": 29
+  }
+}

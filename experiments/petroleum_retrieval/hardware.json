@@ -1,0 +1,7 @@
+{
+  "physical_cpu_count": 16,
+  "gpu_used": false,
+  "logical_cpu_count": 24,
+  "memory_bytes": 16869285888,
+  "processor": "Intel(R) Core(TM) i7-14650HX"
+}

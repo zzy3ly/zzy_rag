@@ -1,0 +1,40 @@
+{
+  "python": "3.13.1",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "packages": {
+    "numpy": "2.2.3",
+    "chromadb": "0.6.3",
+    "onnxruntime": "1.20.1",
+    "tokenizers": "0.21.0",
+    "cohere": "5.14.0",
+    "langchain-text-splitters": "0.3.6",
+    "requests": "2.32.3"
+  },
+  "files_sha256": {
+    "experiments\\production_proxy\\build_dataset.py": "17bfcbb264ff7d673465021fb2076e978057fbd8a88c7662ae9d182e9c2d954f",
+    "experiments\\production_proxy\\build_report.py": "06e27d9ad3846b7d1f9216abf07e5b0bac3c4f96acf58bc930f51f4bd6b52ac6",
+    "experiments\\production_proxy\\download_sources.py": "31cd348607d0ca21e53e10214a0fc50de1e3eb470edadba890b6194a8b88b52d",
+    "experiments\\production_proxy\\evaluate.py": "4c319f3d726b06c52fdaeeb2b059d3bc5a3857c4c735fe239f6b01489a96842d",
+    "experiments\\production_proxy\\run_local.py": "e40805f5e05ba6bdf85b33f7dc0eca55a3a36fe91b1dbb36eb3f3e74ea3b89fb",
+    "experiments\\production_proxy\\run_rerank.py": "5c034d0f38a947acb9ac244cf412cc9ecd72cff89a7f583e3a21e41fcfcdadb7",
+    "experiments\\production_proxy\\test_protocol.py": "999dff95dfd0b397e316ae93e2ef1cbfd36e40b7ec26d593c65fb4ab812dc23c",
+    "experiments\\production_proxy\\facts.tsv": "56cca34d8d80021f076a6102ae5248142d16b6b34ae6268206854849532b6969",
+    "experiments\\production_proxy\\posthoc_audit.json": "4311c68acffbff0c23931c9e45f5fd9b68c59e4e1947afb8555fb8cdd2fbff96",
+    "experiments\\production_proxy\\selection.json": "6430687b58062d764f527860c6d3b51ca576e4a32c61fdb518e3312549b505bd",
+    "experiments\\production_proxy\\results\\local_rankings.jsonl": "bd5a4c8c4cb69ae8d5843d30001ce7888e8ed34f697a7e7bac770eb74bc440a7",
+    "experiments\\production_proxy\\results\\per_query_metrics.jsonl": "2f9774d50fa77e8d8ee62e4c9b7de6212e721375f71317baa5764371e44c1636",
+    "experiments\\production_proxy\\results\\rerank_rankings.jsonl": "b2e84934b5eb3f57729d965e35929acb12647afe8796eb48e26f47c737659b2c",
+    "experiments\\production_proxy\\data\\chunks_legacy1000.jsonl": "66460323574cad6261557031ed5ae2c888e64be072bb1c907202e2fd9dba6722",
+    "experiments\\production_proxy\\data\\chunks_page.jsonl": "e112bbd0e82ce43776bccc7c810a2c6a86e34d6d681e187b089952a4abf9a214",
+    "experiments\\production_proxy\\data\\chunks_token.jsonl": "d4713c7f46edb8caea3cd9c97b2dd6de52ab183a5a883b80c21079c2d43699b8",
+    "experiments\\production_proxy\\data\\documents.jsonl": "97099cfbd3c54639614b57376dc7ae9aa68a47e0ea0bd867304d0a3078a4c94d",
+    "experiments\\production_proxy\\data\\queries.jsonl": "a010f7019532a4661358028d84ac7bcc4d6add686242231089c2636b0c0bce50",
+    "backend\\Embeddings.py": "ddfb2a272186da1f2876f9f8ef93181d428a0006aaee31137d3ada172a0e6d7b",
+    "backend\\HybridRetrieval.py": "ce23991a0107ee716264ae9e3f338a11c43b6b7aa7f4e0bd4d4752631ae9d0be",
+    "backend\\TokenChunking.py": "5af805b78fd2f21d6ce0d29412e24195c213ca9d4e011aabee7fff1663697888"
+  },
+  "test_commands": [
+    "python -m unittest discover -s experiments/production_proxy -p test_protocol.py",
+    "python -m unittest discover -s experiments/petroleum_retrieval -p test_retrieval.py"
+  ]
+}

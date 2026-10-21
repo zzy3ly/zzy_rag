@@ -1,0 +1,40 @@
+{
+  "run": "small_test",
+  "corpus_count": 171,
+  "query_count": 30,
+  "corpus_sha256": "5571f50394327f70fa8c3ef8229ffb137bcd9bd221b18b7224270de76e562947",
+  "frozen_inputs": {
+    "corpus.jsonl": "500893a9ed0be8a1a35d533fd78b1ef04c2ae0d78e0824a52b9f542b4aeadc49",
+    "queries_reviewed.jsonl": "77f7e68c1ed79d9032cbfdb0f44bd958bc78404b86c32705df6c54c4fbf9f4bf",
+    "annotations.json": "7f41615ecb9a726cf300b2114f05ad26ee2356c167b191fec2b1e7a4a6ad23c5",
+    "Embeddings.py": "ddfb2a272186da1f2876f9f8ef93181d428a0006aaee31137d3ada172a0e6d7b",
+    "accepted": 38,
+    "test": 30,
+    "excluded": 2,
+    "small_corpus": 171
+  },
+  "embedding": "Chroma default ONNX all-MiniLM-L6-v2; 384 dimensions; default truncation",
+  "distance": "L2",
+  "reranker": "rerank-english-v3.0",
+  "threshold": 0.01,
+  "dense_candidates": 100,
+  "hybrid_dense": 50,
+  "hybrid_bm25": 50,
+  "rrf_constant": 60,
+  "bm25_k1": 1.5,
+  "bm25_b": 0.75,
+  "final_k": 5,
+  "legacy_code": "unmodified EmbeddingHandler.retrieve_documents; constructor bypass only",
+  "segmentation": "Shared released source passages, whitespace normalized; no re-chunking",
+  "tuning": "None. All parameters fixed before first retrieval run.",
+  "python": "3.13.1 (tags/v3.13.1:0671451, Dec  3 2024, 19:06:28) [MSC v.1942 64 bit (AMD64)]",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "packages": {
+    "chromadb": "0.6.3",
+    "cohere": "5.14.0",
+    "onnxruntime": "1.20.1",
+    "numpy": "2.2.3"
+  },
+  "timing_note": "API pacing excluded; cached runs retain original reranker duration but are not live latency samples.",
+  "timestamp_utc": "2026-10-20T07:02:07Z"
+}

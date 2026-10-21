@@ -1,0 +1,12 @@
+{
+  "source_url": "https://huggingface.co/datasets/porestar/diskos_qa/resolve/627ecd293877d943aac18914c0ce86053d6c1b97/FORCE_QA_public_final.csv",
+  "revision": "627ecd293877d943aac18914c0ce86053d6c1b97",
+  "source_sha256": "e4af8412d123bbd751c03feb234d38f2c5854faef421be737457858c8e236e47",
+  "source_rows": 1027,
+  "source_unique_chunk_ids": 1690,
+  "deduplicated_passages": 1628,
+  "sample_questions": 40,
+  "sampling": "SHA256(petroleum-v1-20261020:Question_ID); first 5 entailed per topic; first dev, remaining test",
+  "license": "NLOD 2.0; upstream FORCE source CC BY 4.0",
+  "label_warning": "Source context lists are NOT relevance judgments; reviewed qrels are separate."
+}
