@@ -1,9 +1,9 @@
 # zzy_rag
 
-一个可复现的油气领域 RAG 检索实验项目。仓库保留原始 FastAPI + Chroma
-问答原型，并新增长度感知分块、BM25、向量检索、RRF 混合检索、统一重排
-和证据跨度评测。目前在线链路还包含异步知识入库、结构化父子切分、内容哈希
-幂等、失败重试及文档版本原子切换。
+一个可复现的油气领域 RAG 检索实验项目。在线服务使用OpenSearch统一承载
+BM25、MiniLM向量、元数据过滤和原生RRF混合检索，并包含异步知识入库、
+结构化父子切分、内容哈希幂等、失败重试及文档版本切换。历史实验仍保留
+Chroma基线，保证原有结果可以复现。
 
 ## 实验结论
 
@@ -29,7 +29,7 @@
 文档上传
   -> 持久化任务队列与状态机
   -> 结构解析与父子分块
-  -> Chroma / MiniLM 暂存版本
+  -> OpenSearch / MiniLM 暂存版本
   -> 完整性校验与原子激活
   -> Dense + BM25 候选召回
   -> RRF 融合
@@ -41,8 +41,11 @@
 - `backend/TokenChunking.py`：按嵌入模型 token 上限切分并保留源字符位置。
 - `backend/StructureChunking.py`：章节/条款优先的父子切分，小块召回、父块扩展。
 - `backend/Ingestion.py`：持久化异步任务、幂等、重试、版本激活、审计与回滚。
-- `backend/HybridRetrieval.py`：当前在线使用的 BM25、RRF 和统一权限范围过滤实现。
+- `backend/OpenSearchBackend.py`：索引映射、批量写入、原生BM25+k-NN RRF和版本操作。
+- `backend/MiniLMEncoder.py`：本地384维MiniLM编码及与分块共用的Tokenizer。
+- `backend/HybridRetrieval.py`：历史实验使用的本地BM25/RRF实现，不再用于在线链路。
 - `docs/INGESTION_LIFECYCLE.md`：入库状态机、接口和一致性边界。
+- `docs/OPENSEARCH.md`：本地启动、配置、旧索引迁移和生产部署边界。
 - `experiments/production_proxy/`：220 题生产场景代理评测。
 - `experiments/petroleum_retrieval/`：较早的 DISKOS-QA 对照实验。
 - `frontend/`：原型前端页面。
@@ -76,17 +79,19 @@ D:\python\python.exe -X utf8 experiments/production_proxy/run_rerank.py
 D:\python\python.exe -X utf8 experiments/production_proxy/build_report.py
 ```
 
-重排实验优先从环境变量 `COHERE_API_KEY` 读取凭据。任何 API Key、数据库、
-Chroma 索引、下载原文和本地缓存都被 `.gitignore` 排除。
+重排实验优先从环境变量 `COHERE_API_KEY` 读取凭据。任何 API Key、本地数据库、
+历史Chroma索引、OpenSearch数据卷、下载原文和缓存都不会提交到Git。
 
 ## 启动旧问答原型
 
-LLM 生成部分仍保留原型的本地 Ollama 与 OpenRouter 路径。检索入口已经切换为
-Dense Top50 + BM25 Top50 + RRF(60) + Cohere 重排。Cohere 凭据从
-`COHERE_API_KEY` 或本地忽略文件 `backend/cohere.txt` 读取。
+LLM生成部分仍保留原型的本地Ollama与OpenRouter路径。在线检索由OpenSearch
+执行BM25 + k-NN + RRF(60)，随后使用Cohere重排。先按
+[OpenSearch部署说明](docs/OPENSEARCH.md)启动服务并配置环境变量。
 
 ```powershell
 Set-Location backend
+D:\python\python.exe -m pip install -r requirements.txt
+D:\python\python.exe -m pip install -r requirements-opensearch.txt
 uvicorn FastAPI:app --port 8000 --reload
 ```
 

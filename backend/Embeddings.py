@@ -1,15 +1,14 @@
-"""Document ingestion and the online hybrid retrieval entry point."""
+"""Document ingestion and OpenSearch-native hybrid retrieval entry point."""
 
 import os
 from pathlib import Path
 from typing import Dict, List, Tuple
-import threading
 import uuid
 
-import chromadb
 import cohere
 
-from HybridRetrieval import HybridRetriever
+from MiniLMEncoder import MiniLMEncoder
+from OpenSearchBackend import OpenSearchBackend, create_opensearch_client
 from UploadHandler import UploadHandler
 
 
@@ -27,63 +26,33 @@ def _load_cohere_key(explicit_key=None):
 
 
 class EmbeddingHandler:
-    """Maintain Chroma vectors and a synchronized BM25 + dense RRF retriever."""
+    """Use one OpenSearch index for BM25, vectors, filters, and versions."""
 
-    def __init__(self, persist_directory="./chromadb", similarity_score=0.01,
-                 collection="crisischatbot", chunk_size=1000, chunk_overlap=0,
+    def __init__(self, persist_directory=None, similarity_score=0.01,
+                 collection="rag-chunks-v1", chunk_size=1000, chunk_overlap=0,
                  reranker=None, cohere_api_key=None, dense_k=50, sparse_k=50,
-                 candidate_k=100, rrf_constant=60):
-        self.db = chromadb.PersistentClient(path=persist_directory)
-        self.collection = self.db.get_or_create_collection(collection)
-        self._lifecycle_lock = threading.RLock()
+                 candidate_k=100, rrf_constant=60, opensearch_client=None,
+                 encoder=None, pipeline_name="rag-hybrid-rrf-v1",
+                 initialize=True):
+        # Kept for compatibility with callers from the Chroma implementation.
+        del persist_directory, chunk_overlap, sparse_k
         self.upload_handler = UploadHandler(chunk_size=chunk_size)
-        self._migrate_legacy_chunks()
+        self.encoder = encoder or MiniLMEncoder()
         self.co = reranker or cohere.Client(_load_cohere_key(cohere_api_key))
         self.similarity_score = similarity_score
-        self.hybrid_retriever = HybridRetriever(
-            collection=self.collection,
-            documents=self._collection_documents(),
-            reranker=self.co,
+        self.backend = OpenSearchBackend(
+            client=opensearch_client or create_opensearch_client(),
+            encoder=self.encoder,
+            index_name=collection,
+            pipeline_name=pipeline_name,
+            dimension=self.encoder.dimension,
             dense_k=dense_k,
-            sparse_k=sparse_k,
             candidate_k=candidate_k,
             rrf_constant=rrf_constant,
-            threshold=similarity_score,
+            shards=int(os.environ.get("OPENSEARCH_INDEX_SHARDS", "1")),
+            replicas=int(os.environ.get("OPENSEARCH_INDEX_REPLICAS", "0")),
+            initialize=initialize,
         )
-
-    def _migrate_legacy_chunks(self):
-        """Keep indexes created before lifecycle metadata queryable."""
-        snapshot = self.collection.get(include=["documents", "metadatas"])
-        ids = snapshot.get("ids") or []
-        documents = snapshot.get("documents") or []
-        metadatas = snapshot.get("metadatas") or []
-        changed_ids, changed_metadatas = [], []
-        for chunk_id, text, metadata in zip(ids, documents, metadatas):
-            if (metadata or {}).get("lifecycle_state"):
-                continue
-            value = dict(metadata or {})
-            value["lifecycle_state"] = "ACTIVE"
-            value.setdefault("version_id", f"legacy-{value.get('document_id', chunk_id)}")
-            value.setdefault("parent_id", chunk_id)
-            value.setdefault("parent_text", text)
-            changed_ids.append(chunk_id)
-            changed_metadatas.append(value)
-        if changed_ids:
-            self.collection.update(ids=changed_ids, metadatas=changed_metadatas)
-
-    def _collection_documents(self):
-        snapshot = self.collection.get(include=["documents", "metadatas"])
-        documents = snapshot.get("documents") or []
-        metadatas = snapshot.get("metadatas") or [{} for _ in documents]
-        return [
-            {"id": chunk_id, "text": text, "metadata": metadata or {}}
-            for chunk_id, text, metadata in zip(
-                snapshot.get("ids", []), documents, metadatas)
-        ]
-
-    def refresh_sparse_index(self):
-        """Rebuild BM25 after a successful Chroma mutation."""
-        self.hybrid_retriever.replace_documents(self._collection_documents())
 
     def fully_process_file(self, file_content: bytes, filename: str,
                            document_id: str) -> Tuple[str, str]:
@@ -121,151 +90,96 @@ class EmbeddingHandler:
         if not documents:
             return ["success", ""]
         try:
-            normalized = []
-            for chunk_id, document, metadata in zip(ids, documents, metadatas):
+            indexed = []
+            for chunk_id, text, metadata in zip(ids, documents, metadatas):
                 value = dict(metadata)
                 value.setdefault("lifecycle_state", "ACTIVE")
                 value.setdefault("version_id", f"legacy-{value.get('document_id', chunk_id)}")
                 value.setdefault("parent_id", chunk_id)
-                value.setdefault("parent_text", document)
-                normalized.append(value)
-            self.collection.add(documents=documents, metadatas=normalized, ids=ids)
-            self.refresh_sparse_index()
+                value.setdefault("parent_text", text)
+                value.setdefault("chunk_type", "child")
+                indexed.append({"id": chunk_id, "text": text, "metadata": value})
+            self.backend.index_documents(indexed)
             return ["success", ""]
         except Exception as exc:
             filename = metadatas[0].get("filename", "Unknown")
-            return ["error", f"An error occurred while embedding {filename}: {type(exc).__name__}"]
+            return ["error", f"An error occurred while indexing {filename}: {type(exc).__name__}"]
 
     def stage_version(self, chunks, document_id: str, version_id: str,
                       collection_id: str, filename: str):
-        """Embed a complete version while keeping it invisible to queries."""
-        documents, ids, metadatas = [], [], []
+        indexed = []
         for chunk in chunks:
-            ids.append(f"{version_id}:{chunk['chunk_id']}")
-            documents.append(chunk["embedding_text"])
-            metadatas.append({
-                "document_id": document_id,
-                "version_id": version_id,
-                "collection_id": collection_id,
-                "filename": filename,
-                "lifecycle_state": "STAGING",
-                "chunk_type": "child",
-                "parent_id": f"{version_id}:{chunk['parent_id']}",
-                "parent_text": chunk["parent_text"],
-                "title_path": chunk["title_path"],
-                "source_start": int(chunk["start"]),
-                "source_end": int(chunk["end"]),
-                "token_count": int(chunk["token_count"]),
+            indexed.append({
+                "id": f"{version_id}:{chunk['chunk_id']}",
+                "text": chunk["embedding_text"],
+                "metadata": {
+                    "document_id": document_id,
+                    "version_id": version_id,
+                    "collection_id": collection_id,
+                    "filename": filename,
+                    "lifecycle_state": "STAGING",
+                    "chunk_type": "child",
+                    "parent_id": f"{version_id}:{chunk['parent_id']}",
+                    "parent_text": chunk["parent_text"],
+                    "title_path": chunk["title_path"],
+                    "source_start": int(chunk["start"]),
+                    "source_end": int(chunk["end"]),
+                    "token_count": int(chunk["token_count"]),
+                },
             })
-        result = self.add_processed_documents(documents, ids, metadatas)
-        if result[0] != "success":
-            raise RuntimeError(result[1])
-        return len(ids)
+        return self.backend.index_documents(indexed)
 
     def validate_version(self, version_id: str, expected_chunks: int):
-        snapshot = self.collection.get(
-            where={"version_id": version_id}, include=["metadatas"])
-        ids = snapshot.get("ids") or []
-        metadatas = snapshot.get("metadatas") or []
-        valid = (len(ids) == expected_chunks and expected_chunks > 0 and
-                 all(item.get("lifecycle_state") == "STAGING" for item in metadatas) and
-                 len(ids) == len(set(ids)))
-        if not valid:
-            raise RuntimeError(
-                f"staged version validation failed: expected {expected_chunks}, found {len(ids)}")
-        return True
+        return self.backend.validate_version(version_id, expected_chunks)
 
     def activate_version(self, document_id: str, version_id: str):
-        """Switch one logical document under the same lock used by retrieval.
-
-        Chroma has no cross-record transaction.  The process-level lock prevents
-        online readers from observing the archive/activate metadata updates, and
-        compensation restores the previous metadata if an update fails.
-        """
-        with self._lifecycle_lock:
-            snapshot = self.collection.get(
-                where={"document_id": document_id}, include=["metadatas"])
-            ids = snapshot.get("ids") or []
-            original = snapshot.get("metadatas") or []
-            target_ids = [cid for cid, meta in zip(ids, original)
-                          if meta.get("version_id") == version_id]
-            if not target_ids:
-                raise RuntimeError("version contains no indexed chunks")
-            updated = []
-            for metadata in original:
-                value = dict(metadata)
-                if value.get("version_id") == version_id:
-                    value["lifecycle_state"] = "ACTIVE"
-                elif value.get("lifecycle_state") == "ACTIVE":
-                    value["lifecycle_state"] = "ARCHIVED"
-                updated.append(value)
-            try:
-                self.collection.update(ids=ids, metadatas=updated)
-                self.refresh_sparse_index()
-            except Exception:
-                try:
-                    self.collection.update(ids=ids, metadatas=original)
-                    self.refresh_sparse_index()
-                finally:
-                    raise
+        return self.backend.activate_version(document_id, version_id)
 
     def remove_version(self, version_id: str):
-        with self._lifecycle_lock:
-            snapshot = self.collection.get(
-                where={"version_id": version_id}, include=["metadatas"])
-            if any(item.get("lifecycle_state") == "ACTIVE"
-                   for item in (snapshot.get("metadatas") or [])):
-                raise RuntimeError("refusing to remove an active version")
-            self.collection.delete(where={"version_id": version_id})
-            self.refresh_sparse_index()
+        return self.backend.remove_version(version_id)
 
     def deactivate_version(self, version_id: str):
-        """Compensate a metadata-transaction failure before first activation."""
-        with self._lifecycle_lock:
-            snapshot = self.collection.get(
-                where={"version_id": version_id}, include=["metadatas"])
-            ids = snapshot.get("ids") or []
-            metadatas = []
-            for item in snapshot.get("metadatas") or []:
-                value = dict(item)
-                value["lifecycle_state"] = "STAGING"
-                metadatas.append(value)
-            if ids:
-                self.collection.update(ids=ids, metadatas=metadatas)
-                self.refresh_sparse_index()
+        return self.backend.deactivate_version(version_id)
 
     def remove_documents(self, document_ids: List[str]) -> Tuple[str, str]:
         try:
-            for document_id in document_ids:
-                self.collection.delete(where={"document_id": document_id})
-            self.refresh_sparse_index()
+            self.backend.remove_documents(document_ids)
             return ["success", ""]
         except Exception as exc:
             return ["error", f"An error occurred while removing documents: {type(exc).__name__}"]
 
     def retrieve_documents(self, query: str, num_docs: int = 5,
                            metadata_filters: Dict = None):
-        """Dense Top50 + BM25 Top50 + RRF(60), followed by Cohere reranking."""
+        """OpenSearch BM25+k-NN native RRF, Cohere rerank, parent expansion."""
         active_filter = {"lifecycle_state": "ACTIVE"}
         scoped_filter = ({"$and": [metadata_filters, active_filter]}
                          if metadata_filters else active_filter)
-        with self._lifecycle_lock:
-            status, error, results = self.hybrid_retriever.retrieve_documents(
-                query=query, num_docs=max(num_docs * 3, num_docs),
-                metadata_filters=scoped_filter)
-        if status != "success":
-            return [status, error, results]
-        expanded, seen = [], set()
-        for result in results:
-            metadata = dict(result["metadata"])
-            parent_id = metadata.get("parent_id") or result["text"]
-            if parent_id in seen:
-                continue
-            seen.add(parent_id)
-            matched_child = result["text"]
-            parent_text = metadata.get("parent_text", matched_child)
-            metadata["matched_child_text"] = matched_child
-            expanded.append({"text": parent_text, "metadata": metadata})
-            if len(expanded) == num_docs:
-                break
-        return ["success", "", expanded]
+        try:
+            with self.backend.lifecycle_lock:
+                hits = self.backend.hybrid_search(query, scoped_filter)
+            if not hits:
+                return ["success", "", []]
+            response = self.co.rerank(
+                model=os.environ.get(
+                    "COHERE_RERANK_MODEL", "rerank-multilingual-v3.0"),
+                query=query,
+                documents=[hit["_source"]["text"] for hit in hits],
+                top_n=min(max(num_docs * 3, num_docs), len(hits)))
+            expanded, seen = [], set()
+            for result in response.results:
+                if result.relevance_score < self.similarity_score:
+                    continue
+                source = dict(hits[result.index]["_source"])
+                matched_child = source.pop("text")
+                parent_id = source.get("parent_id") or hits[result.index]["_id"]
+                if parent_id in seen:
+                    continue
+                seen.add(parent_id)
+                parent_text = source.pop("parent_text", matched_child)
+                source["matched_child_text"] = matched_child
+                expanded.append({"text": parent_text, "metadata": source})
+                if len(expanded) == num_docs:
+                    break
+            return ["success", "", expanded]
+        except Exception as exc:
+            return ["error", type(exc).__name__, []]

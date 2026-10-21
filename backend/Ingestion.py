@@ -382,7 +382,9 @@ class IngestionManager:
                 raise ValueError(parsed[1])
             self.store.set_state(job_id, "CHUNKING")
             if self.tokenizer is None:
-                self.tokenizer = load_minilm_tokenizer()
+                encoder = getattr(self.embedding_handler, "encoder", None)
+                self.tokenizer = (encoder.tokenizer if encoder is not None
+                                  else load_minilm_tokenizer())
             result = structure_parent_child_chunks(
                 parsed[1], self.tokenizer, item["filename"])
             if not result["children"]:

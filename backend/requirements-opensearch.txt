@@ -1,0 +1,2 @@
+# Install after the legacy UTF-16 requirements file.
+opensearch-py==3.2.0

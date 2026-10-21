@@ -6,7 +6,6 @@ context do not have to use the same chunk size.
 """
 
 from dataclasses import dataclass, asdict
-from pathlib import Path
 import re
 from typing import Iterable, List
 
@@ -22,18 +21,9 @@ def _ids(tokenizer, text):
 
 
 def load_minilm_tokenizer():
-    """Load the exact tokenizer used by Chroma's default MiniLM embedder."""
-    from chromadb.utils.embedding_functions import ONNXMiniLM_L6_V2
-    from tokenizers import Tokenizer
-
-    path = Path(ONNXMiniLM_L6_V2.DOWNLOAD_PATH) / "onnx" / "tokenizer.json"
-    if not path.exists():
-        # Initialising the embedding function downloads/verifies the model.
-        ONNXMiniLM_L6_V2()
-    tokenizer = Tokenizer.from_file(str(path))
-    tokenizer.no_padding()
-    tokenizer.no_truncation()
-    return tokenizer
+    """Load the tokenizer used by the local MiniLM embedding model."""
+    from MiniLMEncoder import load_minilm_tokenizer as load_tokenizer
+    return load_tokenizer()
 
 
 @dataclass(frozen=True)

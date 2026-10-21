@@ -1,7 +1,9 @@
+import os
 import re
 import sys
 import tempfile
 import unittest
+import uuid
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -9,6 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from Ingestion import IngestionManager
 from Embeddings import EmbeddingHandler
+from OpenSearchBackend import create_opensearch_client
 from StructureChunking import load_minilm_tokenizer, structure_parent_child_chunks
 
 
@@ -147,41 +150,50 @@ class IngestionLifecycleTests(unittest.TestCase):
             restarted.shutdown()
 
 
-class RealChromaLifecycleTests(unittest.TestCase):
+@unittest.skipUnless(os.environ.get("RUN_OPENSEARCH_INTEGRATION") == "1",
+                     "set RUN_OPENSEARCH_INTEGRATION=1 with OpenSearch running")
+class RealOpenSearchLifecycleTests(unittest.TestCase):
     def test_staging_activation_parent_expansion_and_visibility(self):
-        # Chroma's Windows HNSW handle can outlive the client object briefly.
-        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as directory:
+        with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
+            client = create_opensearch_client()
+            index_name = f"lifecycle-test-{uuid.uuid4().hex[:10]}"
+            pipeline_name = f"lifecycle-rrf-{uuid.uuid4().hex[:10]}"
             handler = EmbeddingHandler(
-                persist_directory=str(root / "chroma"),
-                collection="lifecycle-test", reranker=StableReranker(),
-                similarity_score=0.0, dense_k=10, sparse_k=10)
+                opensearch_client=client, collection=index_name,
+                pipeline_name=pipeline_name, reranker=StableReranker(),
+                similarity_score=0.0, dense_k=10, candidate_k=20)
             manager = IngestionManager(
                 handler, root / "lifecycle.db", root / "blobs",
                 tokenizer=load_minilm_tokenizer(), max_attempts=1)
-            first = manager.submit(
-                "engineering", "policy.txt",
-                "第一章 旧规程\n\n旧版识别码 OLD-SEAL-771，每周检查一次。".encode(),
-                document_key="policy")
-            self.assertEqual(manager.wait(first["job_id"], 10)["status"], "ACTIVE")
-            status, _, results = handler.retrieve_documents(
-                "OLD-SEAL-771", 3,
-                {"document_id": {"$in": [first["document_id"]]}})
-            self.assertEqual(status, "success")
-            self.assertTrue(results)
-            self.assertIn("旧版识别码", results[0]["text"])
-            self.assertIn("matched_child_text", results[0]["metadata"])
+            try:
+                first = manager.submit(
+                    "engineering", "policy.txt",
+                    "第一章 旧规程\n\n旧版识别码 OLD-SEAL-771，每周检查一次。".encode(),
+                    document_key="policy")
+                self.assertEqual(manager.wait(first["job_id"], 30)["status"], "ACTIVE")
+                status, _, results = handler.retrieve_documents(
+                    "OLD-SEAL-771", 3,
+                    {"document_id": {"$in": [first["document_id"]]}})
+                self.assertEqual(status, "success")
+                self.assertTrue(results)
+                self.assertIn("旧版识别码", results[0]["text"])
+                self.assertIn("matched_child_text", results[0]["metadata"])
 
-            second = manager.submit(
-                "engineering", "policy.txt",
-                "第一章 新规程\n\n新版识别码 NEW-SEAL-992，每班检查并记录压力。".encode(),
-                document_key="policy")
-            self.assertEqual(manager.wait(second["job_id"], 10)["status"], "ACTIVE")
-            _, _, old_results = handler.retrieve_documents("OLD-SEAL-771", 3)
-            self.assertTrue(all("旧版识别码" not in item["text"] for item in old_results))
-            _, _, new_results = handler.retrieve_documents("NEW-SEAL-992", 3)
-            self.assertTrue(any("新版识别码" in item["text"] for item in new_results))
-            manager.shutdown()
+                second = manager.submit(
+                    "engineering", "policy.txt",
+                    "第一章 新规程\n\n新版识别码 NEW-SEAL-992，每班检查并记录压力。".encode(),
+                    document_key="policy")
+                self.assertEqual(manager.wait(second["job_id"], 30)["status"], "ACTIVE")
+                _, _, old_results = handler.retrieve_documents("OLD-SEAL-771", 3)
+                self.assertTrue(all("旧版识别码" not in item["text"] for item in old_results))
+                _, _, new_results = handler.retrieve_documents("NEW-SEAL-992", 3)
+                self.assertTrue(any("新版识别码" in item["text"] for item in new_results))
+            finally:
+                manager.shutdown()
+                client.indices.delete(index=index_name)
+                client.transport.perform_request(
+                    "DELETE", f"/_search/pipeline/{pipeline_name}")
 
 
 if __name__ == "__main__":
