@@ -2,6 +2,21 @@ from Embeddings import EmbeddingHandler
 from LLM import LLMInteraction
 import logging
 
+
+_CITATION_MARKERS = (
+    "\n\n---\n\n参考文档：",
+    "\n\n---\n\n### Document Citations:",
+)
+
+
+def _without_citation_appendix(text):
+    end = len(text)
+    for marker in _CITATION_MARKERS:
+        position = text.find(marker)
+        if position >= 0:
+            end = min(end, position)
+    return text[:end].rstrip()
+
 class ModularChatbot:
     def __init__(self, database, context_text=None):
         # initialize the chatbot with a database and optional context text
@@ -39,11 +54,18 @@ class ModularChatbot:
                     # "content": "You are a helpful knowledge retrieval agent. You are provided documents that you can use to answer user queries. You should answer the user queries only based on the provided documents, and inform the user if you either were not provided documents, or the documents do not seem to answer their question.",
                 }
             ]
+        else:
+            for message in conversation_history:
+                if message.get("role") == "assistant":
+                    message["content"] = _without_citation_appendix(
+                        message.get("content", ""))
         if conversation_history and conversation_history[0].get("role") == "system":
             conversation_history[0]["content"] = (
                 "You are a knowledgeable assistant. Answer in the same language "
-                "as the user's latest question. When documents are provided, base "
-                "the answer on them and do not invent unsupported procedures."
+                "as the user's latest question. If the question contains Chinese, "
+                "you must answer in Simplified Chinese and must not translate the "
+                "answer into English. When documents are provided, base the answer "
+                "on them and do not invent unsupported procedures."
             )
         # retrieve documents similar to the user's query using document IDs as filters
         metadata_filters = {"document_id": {"$in": doc_ids}}
@@ -82,7 +104,10 @@ class ModularChatbot:
 
 
         # append the assistant's response to the conversation history
-        conversation_history.append({"role": "assistant", "content": full_response})
+        conversation_history.append({
+            "role": "assistant",
+            "content": _without_citation_appendix(full_response),
+        })
 
         # update the raw conversation history in the database
         self.database.update_conversation_raw(conversation_id, conversation_history)

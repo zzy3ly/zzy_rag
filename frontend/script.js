@@ -1,7 +1,7 @@
 const API = 'http://127.0.0.1:8000';
 const USER_ID = 'demo-user';
 const COLLECTION_ID = 'demo-petroleum';
-const CONVERSATION_ID = 'demo-conversation';
+const CONVERSATION_ID = `demo-${crypto.randomUUID()}`;
 
 const systemStatus = document.getElementById('systemStatus');
 const ingestionStatus = document.getElementById('ingestionStatus');
