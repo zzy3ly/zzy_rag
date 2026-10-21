@@ -1,67 +1,46 @@
-<!DOCTYPE html>
-<html lang="zh">
+<!doctype html>
+<html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
-    <title>问答系统</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>油气知识库 RAG 演示</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>上传文档</h1>
-        <input type="file" id="fileInput" />
-        <input type="text" id="collectionId" placeholder="输入集合ID" />
-        <button id="uploadButton">上传</button>
+  <main class="shell">
+    <header>
+      <div>
+        <p class="eyebrow">ZZY RAG · OPENSEARCH</p>
+        <h1>油气知识库智能问答</h1>
+        <p class="subtitle">异步入库 · BM25 + 向量混合召回 · RRF 融合 · 多语言重排</p>
+      </div>
+      <span id="systemStatus" class="badge pending">正在连接服务</span>
+    </header>
 
-        <h2>预加载问题</h2>
-        <div id="preloadedQuestions"></div>
+    <section class="card upload-card">
+      <div>
+        <h2>知识文档入库</h2>
+        <p>支持 TXT、PDF、DOCX 等格式。文档将在后台解析、分块、向量化并原子激活。</p>
+      </div>
+      <div class="upload-row">
+        <input type="file" id="fileInput">
+        <button id="uploadButton">上传并入库</button>
+      </div>
+      <div id="ingestionStatus" class="status-line">演示知识库：demo-petroleum</div>
+      <ul id="documentList" class="document-list"></ul>
+    </section>
 
-        <h1>问答系统</h1>
-        <textarea id="userInput" placeholder="请输入您的问题..."></textarea>
-        <button id="submitBtn">提交</button>
-        <div id="response"></div>
-    </div>
-
-    <script>
-        // 加载预定义问题
-        fetch('http://localhost:8000/dataset')  // 假设您有一个接口来获取数据集
-            .then(response => response.json())
-            .then(data => {
-                const preloadedQuestionsDiv = document.getElementById('preloadedQuestions');
-                data.forEach(item => {
-                    const questionElement = document.createElement('div');
-                    questionElement.innerHTML = `<strong>问题:</strong> ${item.question} <br> <strong>答案:</strong> ${item.answer}`;
-                    preloadedQuestionsDiv.appendChild(questionElement);
-                });
-            })
-            .catch(error => console.error('加载数据集时出错:', error));
-
-        document.getElementById('uploadButton').addEventListener('click', () => {
-            const fileInput = document.getElementById('fileInput');
-            const collectionId = document.getElementById('collectionId').value;
-            const file = fileInput.files[0];
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('collection_id', collectionId); // 添加集合ID
-
-            fetch('http://localhost:8000/process_file/', {
-                method: 'POST',
-                body: formData,
-            })
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                }
-                throw new Error('上传失败');
-            })
-            .then(data => {
-                console.log('成功:', data);
-            })
-            .catch(error => {
-                console.error('错误:', error);
-            });
-        });
-    </script>
-    <script src="script.js"></script>
+    <section class="card chat-card">
+      <h2>检索问答</h2>
+      <div id="messages" class="messages">
+        <div class="message assistant">服务就绪后，可上传规程文档，再询问设备编号、操作步骤或安全要求。</div>
+      </div>
+      <div class="composer">
+        <textarea id="userInput" placeholder="例如：PL-127B 泵出现密封泄漏时应该如何处置？"></textarea>
+        <button id="submitBtn">发送问题</button>
+      </div>
+    </section>
+  </main>
+  <script src="script.js"></script>
 </body>
 </html>

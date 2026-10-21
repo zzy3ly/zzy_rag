@@ -1,5 +1,6 @@
 from Embeddings import EmbeddingHandler
 from LLM import LLMInteraction
+import logging
 
 class ModularChatbot:
     def __init__(self, database, context_text=None):
@@ -17,6 +18,7 @@ class ModularChatbot:
         ]
 
     def handle_query(self, query, userid, conversation_id):
+        user_query = query
         full_response = ""
         context = None
         # retrieve the raw conversation history from the database
@@ -37,6 +39,12 @@ class ModularChatbot:
                     # "content": "You are a helpful knowledge retrieval agent. You are provided documents that you can use to answer user queries. You should answer the user queries only based on the provided documents, and inform the user if you either were not provided documents, or the documents do not seem to answer their question.",
                 }
             ]
+        if conversation_history and conversation_history[0].get("role") == "system":
+            conversation_history[0]["content"] = (
+                "You are a knowledgeable assistant. Answer in the same language "
+                "as the user's latest question. When documents are provided, base "
+                "the answer on them and do not invent unsupported procedures."
+            )
         # retrieve documents similar to the user's query using document IDs as filters
         metadata_filters = {"document_id": {"$in": doc_ids}}
         retrieval_status, retrieval_error, similar_documents = self.embedding_handler.retrieve_documents(query, metadata_filters=metadata_filters)
@@ -81,7 +89,11 @@ class ModularChatbot:
         
         # check if the conversation title is "New chat" and update if necessary
         if self.database.get_conversation_title(conversation_id) == "New chat":
-            # call the LLM to generate a title based on the current conversation history
-            new_title = self.llm_interaction.generate_title(conversation_history)
+            try:
+                new_title = self.llm_interaction.generate_title(conversation_history)
+            except Exception:
+                logging.getLogger(__name__).exception(
+                    "Title generation failed; using the user query as fallback")
+                new_title = user_query.strip().replace("\n", " ")[:40] or "New chat"
             # update the conversation title in the database
             self.database.update_conversation_title(conversation_id, new_title)

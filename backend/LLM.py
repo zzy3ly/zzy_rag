@@ -3,6 +3,17 @@ import requests
 import json
 from openai import OpenAI
 import os
+from pathlib import Path
+
+
+def _load_openrouter_key():
+    value = os.environ.get("OPENROUTER_API_KEY", "").strip()
+    if value:
+        return value
+    key_file = Path(__file__).with_name("openrouter.txt")
+    if key_file.exists():
+        return key_file.read_text(encoding="utf-8").strip()
+    return None
 
 # 支持本地模型（Ollama） 和 云端 LLM（OpenRouter）
 class LLMInteraction:
@@ -10,19 +21,13 @@ class LLMInteraction:
         self.model = model
         self.local_model = True  # default to true, assuming most models are local
         self.conversation_history = []
-        self.api_key = None
-        # read the api key from the openrouter.txt file if it exists and is not empty
-        if os.path.exists('D:\\UserData\\Downloads\\Intelligent-QA-Chatbot\\Intelligent-QA-Chatbot\\backend\\openrouter.txt') and os.path.getsize('D:\\UserData\\Downloads\\Intelligent-QA-Chatbot\\Intelligent-QA-Chatbot\\backend\\openrouter.txt') > 0:
-            with open('D:\\UserData\\Downloads\\Intelligent-QA-Chatbot\\Intelligent-QA-Chatbot\\backend\\openrouter.txt', 'r') as file:
-                self.api_key = file.read().strip()
+        self.api_key = _load_openrouter_key()
         if self.api_key:
             self.client = OpenAI(base_url="https://openrouter.ai/api/v1", api_key=self.api_key)
         # determine if the model is local or paid and initialize accordingly
         if model.lower() in ["openai/gpt-4-turbo-preview", "anthropic/claude-3-opus:beta", "anthropic/claude-3-haiku:beta", "anthropic/claude-3-sonnet:beta"]:
             self.local_model = False
-        else:
-            # ensure the model is synchronized before any loadings is attempted
-            ollama.pull(self.model)
+        # Model downloads are deployment work and must not block API startup.
 
 # 该方法允许动态切换本地 (Ollama) 和云端 (OpenRouter) 模型。
     def switch_model(self, new_model):
@@ -32,8 +37,6 @@ class LLMInteraction:
             self.local_model = False
         else:
             self.local_model = True
-            # ensure the model is synchronized before any loadings is attempted
-            ollama.pull(self.model)
 
 # 这个方法用于检查是否存在 API Key，从而确定当前使用的是 付费云端模型 还是 本地免费模型。          
     def get_paid_status(self):
@@ -56,7 +59,8 @@ class LLMInteraction:
         if self.api_key:
             # send a request to openrouter.ai for response generation
             response = self.client.chat.completions.create(
-                model="anthropic/claude-3-haiku:beta",
+                model=os.environ.get(
+                    "OPENROUTER_TITLE_MODEL", "anthropic/claude-haiku-4.5"),
                 messages=title_generator_template,
             )
             return response.choices[0].message.content
@@ -140,11 +144,11 @@ class LLMInteraction:
                     title = doc[filename_start:filename_end]
                     content = doc[content_start:content_end]
                     # print(f"Title: {title}\nContent: {content}")
-                    structured_documents += "{citeTitStart}" + title + "{citeTitEnd}{citeConStart}" + content + "{citeConEnd}\n\n"
+                    structured_documents += f"来源：{title}\n{content}\n\n"
             # remove the last two newlines for clean formatting
             # print("Structured documents: ", structured_documents)
             structured_documents = structured_documents.strip()
             # print("Stripped Structured documents: ", structured_documents)
             if structured_documents:
-                yield "\n\n---\n\n### Document Citations:\n\n"
+                yield "\n\n---\n\n参考文档：\n\n"
                 yield structured_documents
